@@ -8,6 +8,8 @@ from telegram.error import NetworkError, Unauthorized
 from leonard import Leonard
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger('leonard')
+logger.setLevel(logging.INFO)
 
 telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
 bot = Leonard(telegram_client)
