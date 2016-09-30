@@ -2,6 +2,8 @@ requests
 python-telegram-bot
 redis
 jinja2
+
 flask
+gunicorn
 
 mapbox

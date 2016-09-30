@@ -47,8 +47,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'polling':
             update_id += 1
     exit()
 
+# Register webhook
+webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
+bot.telegram.setWebhook(webhook_url)
+
 if __name__ == '__main__':
-    # Register webhook
-    webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
-    bot.telegram.setWebhook(webhook_url)
     bot.app.run(port=8888)
