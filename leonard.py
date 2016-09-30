@@ -22,6 +22,8 @@ class Leonard:
         self.redis = from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
         self.bytes_fields = []
 
+        self.logger = logger
+
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
             if plugin_name.endswith('.py'):
@@ -36,10 +38,10 @@ class Leonard:
         # Add snippets
         message.u_id = message.from_user.id
 
-        current_handler = self.user_get(message.u_id, 'next_handler',
-                                        default=self.default_handler)
+        current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
         self.user_set(message.u_id, 'handler', current_handler)
-
+        self.user_set(message.u_id, 'next_handler', '')
+        
         self.handlers[current_handler](message, self)
 
     def user_get(self, user_id, field, default=None):

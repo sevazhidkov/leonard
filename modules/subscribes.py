@@ -6,9 +6,8 @@ INITIAL_WEATHER_OFFER = jinja2.Template("""You shouldn't write me to get help �
 ⛅ Maybe weather? Morning forecasts or "Rain in next hour" reports?
 """)
 WEATHER_SETUP_RESULT = jinja2.Template(
-    """👌 Not a problem, {% if result %}I subscribed you. It's ready and will notificate you next time.{% else %}you can always change it later.{% endif %}
-
-📩 We have more cool notifications to subscribe, you can try it in main menu."""
+    "👌 Not a problem, {% if result %}I subscribed you. It's ready " +
+    "and will notificate you next time.{% else %}you can always change it later.{% endif %}"
 )
 
 
@@ -31,6 +30,7 @@ def subscribes_setup(message, bot):
 
 
 def subscribes_setup_result(message, bot):
+    from modules.location import welcome_location_setup
     base_key = 'notifications:weather:{}'
     if '🌄' in message.text:
         key = base_key.format('morning')
@@ -46,3 +46,4 @@ def subscribes_setup_result(message, bot):
     if key:
         bot.user_set(message.u_id, key, 1)
     bot.user_set(message.u_id, 'handler', 'welcome-location-setup')
+    welcome_location_setup(message, bot)

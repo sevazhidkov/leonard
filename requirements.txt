@@ -2,3 +2,5 @@ requests
 python-telegram-bot
 redis
 jinja2
+
+mapbox
