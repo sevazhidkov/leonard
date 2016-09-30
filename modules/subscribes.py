@@ -30,7 +30,6 @@ def subscribes_setup(message, bot):
 
 
 def subscribes_setup_result(message, bot):
-    from modules.location import welcome_location_setup
     base_key = 'notifications:weather:{}'
     if '🌄' in message.text:
         key = base_key.format('morning')
@@ -45,5 +44,4 @@ def subscribes_setup_result(message, bot):
     )
     if key:
         bot.user_set(message.u_id, key, 1)
-    bot.user_set(message.u_id, 'handler', 'welcome-location-setup')
-    welcome_location_setup(message, bot)
+    bot.call_handler(message, 'welcome-location-setup')

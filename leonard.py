@@ -13,8 +13,7 @@ logger = logging.getLogger('leonard')
 
 class Leonard:
     def __init__(self, telegram_client):
-        self.default_handler = 'welcome-message'
-        self.menu_handler = 'menu'
+        self.default_handler = 'main-menu'
 
         self.telegram = telegram_client
 
@@ -43,12 +42,18 @@ class Leonard:
     def process_message(self, message: Message):
         # Add snippets
         message.u_id = message.from_user.id
+        message.moved = False
 
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
         self.user_set(message.u_id, 'handler', current_handler)
         self.user_set(message.u_id, 'next_handler', '')
 
         self.handlers[current_handler](message, self)
+
+    def call_handler(self, message, name):
+        self.user_set(message.u_id, 'handler', name)
+        message.moved = True
+        self.handlers[name](message, self)
 
     def user_get(self, user_id, field, default=None):
         key = 'user:{}:{}'.format(user_id, field)

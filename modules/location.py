@@ -62,7 +62,6 @@ def welcome_location_setup(message, bot):
 
 
 def location_setup_result(message, bot):
-    from modules.registration import welcome_setup_result
     if not message.location:
         result = geocode(message.text, bot)
         if not result:
@@ -72,5 +71,4 @@ def location_setup_result(message, bot):
     else:
         result = reverse_geocode(message.location['latitude'], message.location['longitude'], bot)
     bot.user_set(message.u_id, 'location', json.dumps(result))
-    bot.user_set(message.u_id, 'handler', 'welcome-setup-result')
-    welcome_setup_result(message, bot)
+    bot.call_handler(message, 'welcome-setup-result')

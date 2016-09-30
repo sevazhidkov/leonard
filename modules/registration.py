@@ -20,15 +20,15 @@ def register(bot):
 
 
 def welcome_message(message, bot):
-    from modules.subscribes import subscribes_setup
     bot.telegram.send_message(
         chat_id=message.u_id,
         text=WELCOME_MESSSAGE_TEMPLATE.render(first_name=message.from_user.first_name)
     )
-    bot.user_set(message.u_id, 'handler', 'subscribes-setup')
-    subscribes_setup(message, bot)
+    bot.call_handler(message, 'subscribes-setup')
 
 
 def welcome_setup_result(message, bot):
+    bot.user_set(message.u_id, 'registered', '1')
     bot.telegram.send_message(message.u_id, WELCOME_SETUP_RESULT)
     bot.telegram.send_message(message.u_id, CONTACT_WITH)
+    bot.call_handler(message, 'main-menu')
