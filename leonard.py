@@ -1,7 +1,10 @@
 import os
 import logging
 import importlib
+
+from flask import Flask
 from redis import from_url
+
 from telegram import Update
 from telegram.message import Message
 
@@ -14,6 +17,9 @@ class Leonard:
         self.menu_handler = 'menu'
 
         self.telegram = telegram_client
+
+        # Flask web app
+        self.app = Flask(__name__)
 
         # Dict str -> function with all handlers for messages
         # and other updates
@@ -41,7 +47,7 @@ class Leonard:
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
         self.user_set(message.u_id, 'handler', current_handler)
         self.user_set(message.u_id, 'next_handler', '')
-        
+
         self.handlers[current_handler](message, self)
 
     def user_get(self, user_id, field, default=None):
