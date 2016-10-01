@@ -104,8 +104,8 @@ def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='back')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])],
-                [telegram.InlineKeyboardButton('Send location 📍', callback_data='location')]]
+                [telegram.InlineKeyboardButton('Send location 📍', callback_data='location')],
+                [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
         keyboard[0].append(back_button)
     if num != last_num:
