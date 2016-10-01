@@ -7,3 +7,4 @@ flask
 gunicorn
 
 mapbox
+foursquare
