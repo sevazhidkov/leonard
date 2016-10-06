@@ -1,7 +1,8 @@
 import random
 import telegram
 
-MENU = [[('handler', 'Coffee ☕, restaurants 🍝 , places 🏨', 'foursquare-location-choice')]]
+MENU = [[('handler', 'Coffee ☕, restaurants 🍝 , places 🏨', 'foursquare-location-choice')],
+        [('handler', 'Beautiful Vinci filters 🌇 🏙 🌃', 'vinci-upload-image')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',
@@ -32,6 +33,6 @@ def main_menu(message, bot):
                 subkeyboard.append(row[1])
         if subkeyboard:
             keyboard.append(subkeyboard)
-    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard)
     bot.telegram.send_message(message.u_id, random.choice(GREETING_PHRASES),
                               reply_markup=reply_markup)
