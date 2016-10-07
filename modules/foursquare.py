@@ -28,6 +28,9 @@ def register(bot):
     bot.handlers['foursquare-query-choice'] = query_choice
     bot.handlers['foursquare-search-results'] = search_results
 
+    bot.callback_handlers['foursquare-previous'] = previous_result_callback
+    bot.callback_handlers['foursquare-next'] = next_result_callback
+
 
 def location_choice(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'foursquare-query-choice')
@@ -89,8 +92,47 @@ def search_results(message, bot):
         return
     reply_markup = build_result_keyboard(results[0], 0, len(results) - 1)
     bot.telegram.send_message(message.u_id, SEARCH_RESULT.render(
-        venue=venue
+        venue=results[0]
     ), reply_markup=reply_markup)
+
+
+def previous_result_callback(query, bot):
+    results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
+
+    cur_result = bot.user_get(query.u_id, 'foursquare:results:current')
+    if cur_result - 1 < 0:
+        return
+    cur_result -= 1
+    bot.user_set(query.u_id, 'foursquare:results:current', cur_result)
+
+    venue = results[cur_result]
+    edit_current_result(venue, cur_result, query, results, bot)
+
+
+def next_result_callback(query, bot):
+    results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
+
+    cur_result = bot.user_get(query.u_id, 'foursquare:results:current')
+    if cur_result + 1 >= len(results):
+        return
+    cur_result += 1
+    bot.user_set(query.u_id, 'foursquare:results:current', cur_result)
+
+    venue = results[cur_result]
+    edit_current_result(venue, cur_result, query, results, bot)
+
+
+def edit_current_result(venue, cur_result, query, results, bot):
+    bot.telegram.editMessageText(
+        text=SEARCH_RESULT.format(venue=venue),
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id
+    )
+    bot.telegram.editMessageReplyMarkup(
+        reply_markup=build_result_keyboard(venue, cur_result, len(results) - 1),
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id
+    )
 
 
 def round_rating(value):
@@ -101,10 +143,10 @@ def round_rating(value):
 
 
 def build_result_keyboard(venue, num=0, last_num=1):
-    back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='back')
-    next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='next')
+    back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
+    next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Send location 📍', callback_data='location')],
+                [telegram.InlineKeyboardButton('Get location 📍', callback_data='foursquare-get-location')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
         keyboard[0].append(back_button)
