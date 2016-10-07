@@ -6,11 +6,14 @@ MENU = [[('handler', 'Coffee ☕, restaurants 🍝 , places 🏨', 'foursquare-l
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',
-                    'How can I help you today? 🤖']
+                    'How can I help you today? 🤖',
+                    'Any way I can help you? 🤖']
 
 
 def register(bot):
     bot.handlers['main-menu'] = main_menu
+
+    bot.callback_handlers['main-menu-callback'] = main_menu_callback
 
 
 def main_menu(message, bot):
@@ -36,3 +39,8 @@ def main_menu(message, bot):
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard)
     bot.telegram.send_message(message.u_id, random.choice(GREETING_PHRASES),
                               reply_markup=reply_markup)
+
+
+def main_menu_callback(query, bot):
+    query.message.moved = True
+    bot.call_handler(query.message, 'main-menu')

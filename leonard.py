@@ -57,6 +57,7 @@ class Leonard:
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
+        query.message.u_id = query.from_user.id
 
         handler_name = query.data
         self.callback_handlers[handler_name](query, self)

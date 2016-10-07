@@ -12,7 +12,9 @@ SEND_YOUR_QUERY = ("Cool 👍 Tell me, where do you want to go? ☕ 🍝 🍟\n\
                    "Like \"dance club\", \"quiet place\" or \"big moll\". "
                    "Otherwise you can use one of categories below 👇")
 NOT_FOUND = "I'm sorry, but there is nothing to show you for now 😁"
-SEARCH_RESULT = jinja2.Template("{{ venue.name }}\n\n{% if venue.rating %}{{'⭐️' * venue.rating}}{% endif %}")
+SEARCH_RESULT = jinja2.Template("{{ venue.name }}{% if venue.location.address %}, {{ venue.location.address }}"
+                                "{% endif %}\n\n{% if venue.rating %}"
+                                "{{'⭐️' * venue.rating}}\n\n{% endif %}{{ venue.url }}")
 
 CATEGORY_EMOJI = {
     'Café': '🍝'
@@ -30,6 +32,7 @@ def register(bot):
 
     bot.callback_handlers['foursquare-previous'] = previous_result_callback
     bot.callback_handlers['foursquare-next'] = next_result_callback
+    bot.callback_handlers['foursquare-get-location'] = get_location_callback
 
 
 def location_choice(message, bot):
@@ -79,6 +82,14 @@ def search_results(message, bot):
         venue['reasons'] = [reason['summary'] for reason in item['reasons']['items']]
         venue['url'] = FOURSQUARE_LINK.format(item['venue']['id'])
 
+        print(item['venue']['location'])
+
+        venue['location'] = {
+            'lat': item['venue']['location']['lat'],
+            'long': item['venue']['location']['lng'],
+            'address': item['venue']['location'].get('address', '')
+        }
+
         venue['rating'] = 0
         if 'rating' in item['venue']:
             venue['rating'] = round_rating(item['venue']['rating'])
@@ -96,10 +107,19 @@ def search_results(message, bot):
     ), reply_markup=reply_markup)
 
 
+def get_location_callback(query, bot):
+    results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
+    cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
+    venue = results[cur_result]
+    bot.telegram.send_location(chat_id=query.message.chat_id,
+                               longitude=venue['location']['long'],
+                               latitude=venue['location']['lat'])
+
+
 def previous_result_callback(query, bot):
     results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
 
-    cur_result = bot.user_get(query.u_id, 'foursquare:results:current')
+    cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
     if cur_result - 1 < 0:
         return
     cur_result -= 1
@@ -112,7 +132,7 @@ def previous_result_callback(query, bot):
 def next_result_callback(query, bot):
     results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
 
-    cur_result = bot.user_get(query.u_id, 'foursquare:results:current')
+    cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
     if cur_result + 1 >= len(results):
         return
     cur_result += 1
@@ -124,7 +144,7 @@ def next_result_callback(query, bot):
 
 def edit_current_result(venue, cur_result, query, results, bot):
     bot.telegram.editMessageText(
-        text=SEARCH_RESULT.format(venue=venue),
+        text=SEARCH_RESULT.render(venue=venue),
         chat_id=query.message.chat_id,
         message_id=query.message.message_id
     )
@@ -146,6 +166,7 @@ def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
+                [telegram.InlineKeyboardButton('Back to the menu 🏠', callback_data='main-menu-callback')],
                 [telegram.InlineKeyboardButton('Get location 📍', callback_data='foursquare-get-location')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:

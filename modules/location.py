@@ -11,6 +11,10 @@ TYPE_LOCATION_AGAIN = "Oh, sorry, I don't understand üôÅ\n\nYou can try again 
 
 geocoder = Geocoder()
 
+def register(bot):
+    bot.handlers['welcome-location-setup'] = welcome_location_setup
+    bot.handlers['location-setup-result'] = location_setup_result
+
 
 def geocode(location_name, bot=None):
     response = geocoder.forward(location_name).json()
@@ -48,11 +52,6 @@ def reverse_geocode(lat, long, bot=None):
         'name': place.get('text'),
         'country': country
     }
-
-
-def register(bot):
-    bot.handlers['welcome-location-setup'] = welcome_location_setup
-    bot.handlers['location-setup-result'] = location_setup_result
 
 
 def welcome_location_setup(message, bot):
