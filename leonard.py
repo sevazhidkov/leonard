@@ -23,6 +23,7 @@ class Leonard:
         # Dict str -> function with all handlers for messages
         # and other updates
         self.handlers = {}
+        self.callback_handlers = {}
 
         self.redis = from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
         self.bytes_fields = []
@@ -38,6 +39,10 @@ class Leonard:
     def process_update(self, update: Update):
         if update.message:
             self.process_message(update.message)
+        elif update.callback_query:
+            self.process_callback_query(update.callback_query)
+        else:
+            self.logger.info('Unhandled update: {}'.format(update))
 
     def process_message(self, message: Message):
         # Add snippets
@@ -49,6 +54,12 @@ class Leonard:
         self.user_set(message.u_id, 'next_handler', '')
 
         self.handlers[current_handler](message, self)
+
+    def process_callback_query(self, query):
+        query.u_id = query.from_user.id
+
+        handler_name = query.data
+        self.callback_handlers[handler_name](query, self)
 
     def call_handler(self, message, name):
         self.user_set(message.u_id, 'handler', name)
