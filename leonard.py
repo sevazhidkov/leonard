@@ -5,10 +5,12 @@ import importlib
 from flask import Flask
 from redis import from_url
 
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 
 logger = logging.getLogger('leonard')
+
+MENU_BUTTON = 'Back to the menu 🏠'
 
 
 class Leonard:
@@ -36,6 +38,12 @@ class Leonard:
                 plugin = importlib.import_module('modules.{}'.format(plugin_name.rstrip('.py')))
                 plugin.register(self)
 
+    def send_message(self, *args, **kwargs):
+        if 'reply_markup' not in kwargs:
+            kwargs['reply_markup'] = ReplyKeyboardMarkup([[MENU_BUTTON]])
+
+        return self.telegram.send_message(*args, **kwargs)
+
     def process_update(self, update: Update):
         if update.message:
             self.process_message(update.message)
@@ -48,6 +56,11 @@ class Leonard:
         # Add snippets
         message.u_id = message.from_user.id
         message.moved = False
+
+        # Go back to menu haves the largest priority
+        if message.text == MENU_BUTTON:
+            self.call_handler(message, self.default_handler)
+            return
 
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
         self.user_set(message.u_id, 'handler', current_handler)
@@ -64,6 +77,7 @@ class Leonard:
 
     def call_handler(self, message, name):
         self.user_set(message.u_id, 'handler', name)
+        self.user_set(message.u_id, 'next_handler', '')
         message.moved = True
         self.handlers[name](message, self)
 

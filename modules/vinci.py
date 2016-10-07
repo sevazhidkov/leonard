@@ -37,7 +37,7 @@ def register(bot):
 
 def upload_image(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-view')
-    bot.telegram.send_message(message.u_id, SEND_PHOTO)
+    bot.send_message(message.u_id, SEND_PHOTO)
 
 
 def results_view(message, bot):
