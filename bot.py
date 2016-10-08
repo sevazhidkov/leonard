@@ -25,7 +25,7 @@ bot.collect_plugins()
 def webhook(token):
     if token != os.environ['BOT_TOKEN']:
         return 'bad token'
-    update = telegram.Update.de_json(request.get_json(force=True))
+    update = telegram.Update.de_json(request.get_json(force=True), bot.telegram)
     bot.process_update(update)
     return 'ok'
 
