@@ -30,6 +30,7 @@ def webhook(token):
     return 'ok'
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':
+    bot.telegram.setWebhook('')
     try:
         update_id = telegram_client.getUpdates()[0].update_id
     except IndexError:

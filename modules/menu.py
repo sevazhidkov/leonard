@@ -2,7 +2,8 @@ import random
 import telegram
 
 MENU = [[('handler', 'Coffee ☕, restaurants 🍝 , places 🏨', 'foursquare-location-choice')],
-        [('handler', 'Beautiful Vinci filters 🌇 🏙 🌃', 'vinci-upload-image')]]
+        [('handler', 'Beautiful Vinci filters 🌇 🏙 🌃', 'vinci-upload-image')],
+        [('handler', 'Get a Uber 🚖', 'vinci-upload-image')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',
