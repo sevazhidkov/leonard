@@ -53,7 +53,7 @@ webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
 try:
     bot.telegram.setWebhook(webhook_url)
 except NetworkError:
-    time.sleep(2)
+    sleep(1)
     bot.telegram.setWebhook(webhook_url)
 
 if __name__ == '__main__':
