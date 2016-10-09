@@ -50,7 +50,11 @@ if len(sys.argv) > 1 and sys.argv[1] == 'polling':
 
 # Register webhook
 webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
-bot.telegram.setWebhook(webhook_url)
+try:
+    bot.telegram.setWebhook(webhook_url)
+except NetworkError:
+    time.sleep(2)
+    bot.telegram.setWebhook(webhook_url)
 
 if __name__ == '__main__':
     bot.app.run(port=8888)
