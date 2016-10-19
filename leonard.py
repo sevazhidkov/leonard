@@ -69,7 +69,7 @@ class Leonard:
         try:
             self.handlers[current_handler](message, self)
         finally:
-            return 
+            return
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
