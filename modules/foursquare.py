@@ -101,6 +101,7 @@ def search_results(message, bot):
 
     if not results:
         bot.telegram.send_message(message.u_id, NOT_FOUND)
+        bot.call_handler(message, 'main-menu')
         return
     reply_markup = build_result_keyboard(results[0], 0, len(results) - 1)
     bot.telegram.send_message(message.u_id, SEARCH_RESULT.render(
