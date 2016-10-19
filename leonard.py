@@ -66,7 +66,10 @@ class Leonard:
         self.user_set(message.u_id, 'handler', current_handler)
         self.user_set(message.u_id, 'next_handler', '')
 
-        self.handlers[current_handler](message, self)
+        try:
+            self.handlers[current_handler](message, self)
+        finally:
+            return 
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
