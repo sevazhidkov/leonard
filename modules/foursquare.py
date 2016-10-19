@@ -4,8 +4,7 @@ import jinja2
 import telegram
 import foursquare
 
-from leonard import MENU_BUTTON
-from modules.location import reverse_geocode
+from modules.location import set_location
 
 SEND_YOUR_LOCATION = ("Find a cool place using Foursquare data isn't problem for me 👌\n\n"
                       "🌏 Where are you? You can use your default location")
@@ -13,6 +12,7 @@ SEND_YOUR_QUERY = ("Cool 👍 Tell me, where do you want to go? ☕ 🍝 🍟\n\
                    "Like \"dance club\", \"quiet place\" or \"big moll\". "
                    "Otherwise you can use one of our variants 👇")
 NOT_FOUND = "I'm sorry, but there is nothing to show you for now 😁"
+WAIT_A_SECOND = 'Wait a second, please 🕐'
 SEARCH_RESULT = jinja2.Template("{{ venue.name }}{% if venue.location.address %}, {{ venue.location.address }}"
                                 "{% endif %}\n\n{% if venue.rating %}"
                                 "{{'⭐️' * venue.rating}}\n\n{% endif %}{{ venue.url }}")
@@ -41,7 +41,7 @@ def location_choice(message, bot):
     base_location_name = json.loads(bot.user_get(message.u_id, 'location'))['full_name']
     keyboard = [[telegram.KeyboardButton('📍 Send current location', request_location=True)],
                 [telegram.KeyboardButton('🏠 ' + base_location_name)],
-                [MENU_BUTTON]]
+                [bot.MENU_BUTTON]]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     bot.telegram.send_message(message.u_id, SEND_YOUR_LOCATION, reply_markup=reply_markup)
 
@@ -49,18 +49,17 @@ def location_choice(message, bot):
 def query_choice(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'foursquare-search-results')
     if message.location:
-        bot.user_set(
-            message.u_id, 'foursquare:location',
-            json.dumps(
-                reverse_geocode(message.location['latitude'], message.location['longitude'], bot)
-            )
-        )
-    else:
-        bot.user_set(message.u_id, 'foursquare:location', bot.user_get(message.u_id, 'location'))
-    bot.telegram.send_message(message.u_id, SEND_YOUR_QUERY)
+        set_location(bot, message.u_id, message.location)
+
+    bot.user_set(message.u_id, 'foursquare:location', bot.user_get(message.u_id, 'location'))
+    keyboard = telegram.ReplyKeyboardMarkup([['Coffee ☕'],
+                                             ['Pizza 🍕'],
+                                             ['Shop 🛍']])
+    bot.telegram.send_message(message.u_id, SEND_YOUR_QUERY, reply_markup=keyboard)
 
 
 def search_results(message, bot):
+    bot.telegram.send_message(message.u_id, WAIT_A_SECOND, reply_markup=telegram.ReplyKeyboardHide())
     query = message.text
     location = json.loads(bot.user_get(message.u_id, 'location'))
     response = client.venues.explore(

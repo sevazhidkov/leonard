@@ -67,7 +67,13 @@ def location_setup_result(message, bot):
             bot.telegram.send_message(message.u_id, TYPE_LOCATION_AGAIN)
             bot.user_set(message.u_id, 'next_handler', 'location-setup-result')
             return
+        bot.user_set(message.u_id, 'location', json.dumps(result))
     else:
-        result = reverse_geocode(message.location['latitude'], message.location['longitude'], bot)
-    bot.user_set(message.u_id, 'location', json.dumps(result))
+        set_location(bot, message.u_id, message.location)
     bot.call_handler(message, 'welcome-setup-result')
+
+
+def set_location(bot, u_id, location):
+    result = reverse_geocode(location['latitude'], location['longitude'], bot)
+    bot.user_set(u_id, 'location', json.dumps(result))
+    return result

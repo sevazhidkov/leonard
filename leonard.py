@@ -10,11 +10,11 @@ from telegram.message import Message
 
 logger = logging.getLogger('leonard')
 
-MENU_BUTTON = 'Back to the menu 🏠'
-
 
 class Leonard:
     def __init__(self, telegram_client):
+        self.MENU_BUTTON = 'Back to the menu 🏠'
+
         self.default_handler = 'main-menu'
 
         self.telegram = telegram_client
@@ -40,7 +40,7 @@ class Leonard:
 
     def send_message(self, *args, **kwargs):
         if 'reply_markup' not in kwargs:
-            kwargs['reply_markup'] = ReplyKeyboardMarkup([[MENU_BUTTON]])
+            kwargs['reply_markup'] = ReplyKeyboardMarkup([[self.MENU_BUTTON]])
 
         return self.telegram.send_message(*args, **kwargs)
 
@@ -58,7 +58,7 @@ class Leonard:
         message.moved = False
 
         # Go back to menu haves the largest priority
-        if message.text == MENU_BUTTON:
+        if message.text == self.MENU_BUTTON:
             self.call_handler(message, self.default_handler)
             return
 
@@ -74,6 +74,8 @@ class Leonard:
 
         handler_name = query.data
         self.callback_handlers[handler_name](query, self)
+
+        self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
     def call_handler(self, message, name):
         self.user_set(message.u_id, 'handler', name)
