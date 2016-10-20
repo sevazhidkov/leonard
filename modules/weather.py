@@ -36,9 +36,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every morning from 8AM to 10AM', 'morning'),
-    ('Every evening from 19AM to 21AM', 'evening'),
-    ('Before rain', 'rain'),
+    ('Every minute', (['interval'], {'minutes': 1})),
+    ('Every hour', (['interval'], {'hours': 1}))
 ])
 
 
@@ -133,7 +132,7 @@ def change_weather(message, bot):
         bot.call_handler(message, 'main-menu')
 
 
-def build_basic_forecast(location, user_id, bot):
+def build_basic_forecast(location, message, bot):
     weather_data = get_weather(location['lat'], location['long'])
     bot.logger.info('Weather information: {}'.format(weather_data))
     bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
