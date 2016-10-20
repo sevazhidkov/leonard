@@ -36,11 +36,10 @@ class Leonard:
         self.logger = logger
 
         self.scheduler = BackgroundScheduler()
+        self.scheduler.add_jobstore('redis')
         self.scheduler.start()
-        self.subscriptions = []
-        self.available_subscriptions = {}
 
-        self.tz = tzwhere.tzwhere()
+        self.available_subscriptions = {}
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
