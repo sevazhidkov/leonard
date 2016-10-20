@@ -4,6 +4,7 @@ import importlib
 
 from flask import Flask
 from redis import from_url
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
@@ -33,10 +34,20 @@ class Leonard:
 
         self.logger = logger
 
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.add_jobstore('redis')
+        self.scheduler.start()
+
+        self.available_subscriptions = {}
+
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
             if plugin_name.endswith('.py'):
                 plugin = importlib.import_module('modules.{}'.format(plugin_name.rstrip('.py')))
+                if hasattr(plugin, 'SUBSCRIBES'):
+                    self.available_subscriptions[
+                        plugin.NAME if hasattr(plugin, 'NAME') else plugin_name.rstrip('.py')
+                    ] = plugin.SUBSCRIBES
                 plugin.register(self)
 
     def send_message(self, *args, **kwargs):
@@ -70,12 +81,10 @@ class Leonard:
         try:
             self.handlers[current_handler](message, self)
         except Exception as error:
-            if self.debug:
-                raise error
             self.logger.error(error)
             self.telegram.send_message(message.u_id,
-                                       "Ooops, something that I don't understand happen. "
-                                       "Don't worry, my developer already notificated.")
+                                       "Ooops, something that I don't understand happened. "
+                                       "Don't worry, my developer already notified.")
             self.call_handler(message, 'main-menu')
 
     def process_callback_query(self, query):
@@ -119,3 +128,7 @@ class Leonard:
         key = 'user:{}:{}'.format(user_id, field)
         self.redis.set(key, value)
         logger.info('redis set {} => {}'.format(key, value))
+
+
+def call_handler(bot, message, name):
+    bot.call_handler(message, name)
