@@ -1,11 +1,14 @@
 import os
 import json
 import arrow
+import collections
 import requests
 import telegram
 import jinja2
 
 from modules.location import set_location
+
+NAME = 'Weather'
 
 WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n\n{{ day_summary }}")
@@ -29,6 +32,11 @@ WEATHER_ICONS = {
     'partly-cloudy-day': '⛅',
     'partly-cloudy-night': '🌃',
 }
+
+SUBSCRIBES = collections.OrderedDict([
+    ('Every minute', (['interval'], {'minutes': 1})),
+    ('Every hour', (['interval'], {'hours': 1}))
+])
 
 
 def register(bot):
@@ -54,6 +62,7 @@ def change_weather(message, bot):
         bot.call_handler(message, 'main-menu')
     else:
         bot.call_handler(message, 'main-menu')
+
 
 def build_basic_forecast(location, message, bot):
     weather_data = get_weather(location['lat'], location['long'])
