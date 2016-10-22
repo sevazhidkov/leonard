@@ -35,7 +35,6 @@ class Leonard:
         self.logger = logger
 
         self.scheduler = BackgroundScheduler()
-        self.scheduler.add_jobstore('redis')
         self.scheduler.start()
 
         self.available_subscriptions = {}
