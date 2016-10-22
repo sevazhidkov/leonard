@@ -1,7 +1,6 @@
 import telegram
 import jinja2
 
-import leonard
 from leonard import Leonard
 
 INITIAL_WEATHER_OFFER = jinja2.Template("""You shouldn't write me to get help – you can subscribe to some notification messages.
@@ -15,14 +14,14 @@ WEATHER_SETUP_RESULT = jinja2.Template(
 
 
 def register(bot):
-    bot.handlers['subscribes-setup'] = subscribes_setup
-    bot.handlers['subscribes-setup-result'] = subscribes_setup_result
+    bot.handlers['subscribes-setup'] = subscriptions_setup
+    bot.handlers['subscribes-setup-result'] = subscriptions_setup_result
     bot.handlers['subscriptions-show'] = show_subscriptions
     bot.handlers['subscriptions-choose'] = choose_subscriptions
     bot.handlers['subscription-set'] = set_subscription
 
 
-def subscribes_setup(message, bot):
+def subscriptions_setup(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'subscribes-setup-result')
     bot.telegram.send_message(
         chat_id=message.u_id,
@@ -35,7 +34,7 @@ def subscribes_setup(message, bot):
     )
 
 
-def subscribes_setup_result(message, bot):
+def subscriptions_setup_result(message, bot):
     base_key = 'notifications:weather:{}'
     if '🌄' in message.text:
         key = base_key.format('morning')
