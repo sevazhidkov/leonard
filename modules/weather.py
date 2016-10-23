@@ -36,8 +36,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every morning from 8AM to 10AM', 'morning'),
-    ('Every evening from 19AM to 21AM', 'evening'),
+    ('From 8AM to 10AM', 'morning'),
+    ('From 19AM to 21AM', 'evening'),
     ('Before rain', 'rain'),
 ])
 
@@ -58,7 +58,7 @@ def check_show_weather_morning(bot: Leonard):
     return check_show_weather_condition(
         bot,
         lambda timezone: ('morning', arrow.now(timezone).datetime.hour in (8, 9, 10)),
-        map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
+        users
     )
 
 
@@ -67,11 +67,12 @@ def check_show_weather_evening(bot: Leonard):
     return check_show_weather_condition(
         bot,
         lambda timezone: ('evening', arrow.now(timezone).datetime.hour in (19, 20, 21)),
-        map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
+        users
     )
 
 
-def check_show_weather_condition(bot: Leonard, condition, users):
+def check_show_weather_condition(bot: Leonard, condition, users, expire=24 * 60 * 60):
+    users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
     result = []
     for u_id in users:
         location = bot.redis.get('user:{}:location'.format(u_id))
@@ -82,20 +83,8 @@ def check_show_weather_condition(bot: Leonard, condition, users):
         name, correct = condition(timezone)
         if correct and (bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0) <= 0:
             result.append(int(u_id))
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, 24 * 60 * 60)
+            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
     return result
-
-
-# def check_show_weather_rain(bot):
-#     result = []
-#     for user in map(lambda x: x.decode('utf-8'), bot.redis.keys('user:*:location')):
-#         u_id = user.split(':')[1]
-#         user = send(bot.redis.get(user).decode('utf-8'))
-#         timezone = pytz.timezone(user['timezone'])
-#         time = datetime.datetime.now(timezone)
-#         if time.hour == 10:
-#             result.append(int(u_id))
-#     return result
 
 
 def send_show_weather(bot, users):
