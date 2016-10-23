@@ -11,6 +11,7 @@ TYPE_LOCATION_AGAIN = "Oh, sorry, I don't understand üôÅ\n\nYou can try again 
 
 geocoder = Geocoder()
 
+
 def register(bot):
     bot.handlers['welcome-location-setup'] = welcome_location_setup
     bot.handlers['location-setup-result'] = location_setup_result
@@ -32,7 +33,8 @@ def geocode(location_name, bot=None):
         'lat': place['center'][1],
         'full_name': place.get('place_name'),
         'name': place.get('text'),
-        'country': country
+        'country': country,
+        'timezone': bot.tz.tzNameAt(place['center'][1], place['center'][0])
     }
 
 
@@ -50,7 +52,8 @@ def reverse_geocode(lat, long, bot=None):
         'lat': place['center'][1],
         'full_name': place.get('place_name'),
         'name': place.get('text'),
-        'country': country
+        'country': country,
+        'timezone': bot.tz.tzNameAt(place['center'][1], place['center'][0])
     }
 
 

@@ -5,6 +5,8 @@ import collections
 import requests
 import telegram
 import jinja2
+import pytz
+import datetime
 
 from modules.location import set_location
 
@@ -34,8 +36,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every minute', (['interval'], {'minutes': 1})),
-    ('Every hour', (['interval'], {'hours': 1}))
+    ('Every minute', (['interval'], {'minutes': 1}, 'minute')),
+    ('Every hour', (['interval'], {'hours': 1}, 'hour')),
 ])
 
 
@@ -43,6 +45,20 @@ def register(bot):
     bot.handlers['weather-show'] = show_weather
     bot.handlers['weather-change'] = change_weather
     bot.handlers['weather-hour'] = hour_forecast
+
+    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, eval_show_weather))
+
+
+def check_show_weather_morning(bot):
+    for user in bot.redis.keys('user:*:location'):
+        user = eval(bot.redis.get(user.decode('utf-8')).decode('utf-8'))
+        timezone = pytz.timezone(user['timezone'])
+        time = datetime.datetime.now(timezone)
+    pass
+
+
+def eval_show_weather(bot, users):
+    pass
 
 
 def show_weather(message, bot):
