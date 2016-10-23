@@ -80,8 +80,15 @@ class Leonard:
         query.message.u_id = query.from_user.id
 
         handler_name = query.data
-        self.callback_handlers[handler_name](query, self)
-
+        try:
+            self.callback_handlers[handler_name](query, self)
+        except Exception:
+            self.logger.error(error)
+            self.telegram.send_message(message.u_id,
+                                       "Ooops, something that I don't understand happen. "
+                                       "Don't worry, my developer already notificated.")
+            self.call_handler(message, 'main-menu')
+        
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
     def call_handler(self, message, name):
