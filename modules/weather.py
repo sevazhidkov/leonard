@@ -52,11 +52,15 @@ def register(bot):
 
 
 def check_show_weather_morning(bot):
-    for user in bot.redis.keys('user:*:location'):
-        user = eval(bot.redis.get(user.decode('utf-8')).decode('utf-8'))
+    result = []
+    for user in map(lambda x: x.decode('utf-8'), bot.redis.keys('user:*:location')):
+        u_id = user.split(':')[1]
+        user = eval(bot.redis.get(user).decode('utf-8'))
         timezone = pytz.timezone(user['timezone'])
         time = datetime.datetime.now(timezone)
-    pass
+        if time.hour == 10:
+            result.append(int(u_id))
+    return result
 
 
 def eval_show_weather(bot, users):
