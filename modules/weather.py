@@ -6,7 +6,6 @@ import requests
 import telegram
 import jinja2
 import pytz
-import time
 
 from leonard import Leonard
 from modules.location import set_location
@@ -64,7 +63,7 @@ def check_show_weather_morning(bot: Leonard):
 
 
 def check_show_weather_evening(bot: Leonard):
-    users = bot.redis.keys('user:*notifications:{}:{}'.format(NAME, 'evening'))
+    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening'))
     return check_show_weather_condition(
         bot,
         lambda timezone: ('evening', arrow.now(timezone).datetime.hour in (19, 20, 21)),
@@ -75,13 +74,15 @@ def check_show_weather_evening(bot: Leonard):
 def check_show_weather_condition(bot: Leonard, condition, users):
     result = []
     for u_id in users:
-        user = eval(bot.redis.get('user:{}:location'.format(u_id)).decode('utf-8'))
+        location = bot.redis.get('user:{}:location'.format(u_id))
+        if not location:
+            continue
+        user = eval(location.decode('utf-8'))
         timezone = pytz.timezone(user['timezone'])
         name, correct = condition(timezone)
-        if correct and int(time.time() * 1000) - \
-                int(bot.user_get(u_id, 'notifications:{}:{}:last'.format(NAME, name)) or 0) > 86400000:
+        if correct and (bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0) <= 0:
             result.append(int(u_id))
-            bot.user_set(u_id, 'notifications:{}:{}:last'.format(NAME, name), int(time.time() * 1000))
+            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, 24 * 60 * 60)
     return result
 
 
@@ -101,19 +102,22 @@ def send_show_weather(bot, users):
     if not users:
         return
     for user in users:
-        show_weather(None, bot, user)
+        show_weather(None, bot, user, True)
 
 
-def show_weather(message, bot, u_id=None):
+def show_weather(message, bot, u_id=None, subscription=False):
     if message:
         user_id = message.u_id
     else:
         user_id = u_id
-    bot.user_set(user_id, 'next_handler', 'weather-change')
-    bot.telegram.send_message(user_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
-                              reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
+    if not subscription:
+        bot.user_set(user_id, 'next_handler', 'weather-change')
+        bot.telegram.send_message(user_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
+                                  reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
     location = json.loads(bot.user_get(user_id, 'location'))
     text, reply_markup = build_basic_forecast(location, user_id, bot)
+    if subscription:
+        reply_markup = None
     bot.telegram.send_message(user_id, text,
                               reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
 
