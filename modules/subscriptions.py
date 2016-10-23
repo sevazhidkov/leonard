@@ -18,7 +18,6 @@ def register(bot):
     bot.handlers['subscribes-setup'] = subscriptions_setup
     bot.handlers['subscribes-setup-result'] = subscriptions_setup_result
     bot.handlers['subscriptions-show'] = show_subscriptions
-    bot.handlers['subscriptions-choose'] = choose_subscriptions
     bot.handlers['subscription-set'] = set_subscription
 
 
@@ -55,29 +54,17 @@ def subscriptions_setup_result(message, bot):
 
 
 def show_subscriptions(message, bot: Leonard):
-    bot.user_set(message.u_id, 'next_handler', 'subscriptions-choose')
+    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
     reply_markup = telegram.ReplyKeyboardMarkup(
-        [[telegram.KeyboardButton(subscription)] for subscription in bot.available_subscriptions.keys()]
-    )
+        [[telegram.KeyboardButton('{} - {}'.format(name, sub))] for name, chosen_subscription in
+         bot.available_subscriptions.items() for sub in chosen_subscription])
     reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
-    bot.telegram.send_message(message.u_id, 'There are {} subscribe sources'.format(len(bot.available_subscriptions)),
-                              reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
-    pass
-
-
-def choose_subscriptions(message, bot: Leonard):
-    if message.text in bot.available_subscriptions:
-        bot.user_set(message.u_id, 'next_handler', 'subscription-set')
-        chosen_subscriptions = bot.available_subscriptions[message.text]
-        reply_markup = telegram.ReplyKeyboardMarkup(
-            [[telegram.KeyboardButton('{} - {}'.format(message.text, subscription))] for subscription in
-             chosen_subscriptions]
-        )
-        reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
-        bot.telegram.send_message(message.u_id, 'There are {} subscription types'.format(len(chosen_subscriptions)),
-                                  reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
-    else:
-        bot.call_handler(message, 'main-menu')
+    bot.telegram.send_message(
+        message.u_id,
+        'There are {} subscriptions available'.format(sum(map(len, reply_markup.keyboard))),
+        reply_markup=reply_markup,
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
 
 
 def set_subscription(message, bot: Leonard):
