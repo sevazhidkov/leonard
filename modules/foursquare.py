@@ -131,9 +131,10 @@ def get_location_callback(query, bot):
                                latitude=venue['location']['lat'])
 
     reply_markup = build_result_keyboard(results[cur_result], cur_result, len(results) - 1)
-    bot.telegram.send_message(query.u_id, SEARCH_RESULT.render(
-        venue=results[cur_result]
-    ), reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
+    bot.telegram.send_message(query.u_id,
+                              SEARCH_RESULT.render(venue=results[cur_result]),
+                              reply_markup=reply_markup,
+                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 
