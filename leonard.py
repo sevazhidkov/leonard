@@ -12,9 +12,10 @@ logger = logging.getLogger('leonard')
 
 
 class Leonard:
-    def __init__(self, telegram_client):
+    def __init__(self, telegram_client, debug=False):
         self.MENU_BUTTON = 'Back to the menu 🏠'
 
+        self.debug = debug
         self.default_handler = 'main-menu'
 
         self.telegram = telegram_client
@@ -69,6 +70,8 @@ class Leonard:
         try:
             self.handlers[current_handler](message, self)
         except Exception as error:
+            if self.debug:
+                raise error
             self.logger.error(error)
             self.telegram.send_message(message.u_id,
                                        "Ooops, something that I don't understand happen. "
@@ -82,13 +85,20 @@ class Leonard:
         handler_name = query.data
         try:
             self.callback_handlers[handler_name](query, self)
-        except Exception:
+        except Exception as error:
+            self.telegram.answerCallbackQuery(callback_query_id=query.id)
+            
+            if self.debug:
+                raise error
             self.logger.error(error)
-            self.telegram.send_message(message.u_id,
+
+            self.telegram.send_message(query.u_id,
                                        "Ooops, something that I don't understand happen. "
                                        "Don't worry, my developer already notificated.")
-            self.call_handler(message, 'main-menu')
-        
+            self.call_handler(query.message, 'main-menu')
+
+            return
+
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
     def call_handler(self, message, name):

@@ -12,12 +12,16 @@ from leonard import Leonard
 
 WEBHOOK_HOSTNAME = os.environ.get('WEBHOOK_HOSTNAME', 'https://leonardbot.herokuapp.com')
 
+debug = False
+if os.environ['BOT_DEBUG'] == '1':
+    debug = True
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('leonard')
 logger.setLevel(logging.INFO)
 
 telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
-bot = Leonard(telegram_client)
+bot = Leonard(telegram_client, debug)
 bot.collect_plugins()
 
 

@@ -13,7 +13,7 @@ SEND_YOUR_QUERY = ("Cool 👍 Tell me, where do you want to go? ☕ 🍝 🍟\n\
                    "Otherwise you can use one of our variants 👇")
 NOT_FOUND = "I'm sorry, but there is nothing to show you for now 😁"
 WAIT_A_SECOND = 'Wait a second, please 🕐'
-SEARCH_RESULT = jinja2.Template("{{ venue.name }}{% if venue.location.address %}, {{ venue.location.address }}"
+SEARCH_RESULT = jinja2.Template("*{{ venue.name }}*{% if venue.location.address %}, _{{ venue.location.address }}_"
                                 "{% endif %}\n\n{% if venue.rating %}"
                                 "{{'⭐️' * venue.rating}}\n\n{% endif %}{{ venue.url }}")
 
@@ -94,6 +94,8 @@ def search_results(message, bot):
         venue['rating'] = 0
         if 'rating' in item['venue']:
             venue['rating'] = round_rating(item['venue']['rating'])
+        else:
+            venue['rating'] = 3
         results.append(venue)
 
     bot.user_set(message.u_id, 'foursquare:results', json.dumps(results))
@@ -106,16 +108,33 @@ def search_results(message, bot):
     reply_markup = build_result_keyboard(results[0], 0, len(results) - 1)
     bot.telegram.send_message(message.u_id, SEARCH_RESULT.render(
         venue=results[0]
-    ), reply_markup=reply_markup)
+    ), reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def get_location_callback(query, bot):
     results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
     cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
     venue = results[cur_result]
+
+    # Delete inline keyboard from Foursquare card
+    try:
+        bot.telegram.editMessageReplyMarkup(
+            reply_markup=telegram.InlineKeyboardMarkup([]),
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id
+        )
+    except telegram.error.BadRequest:
+        pass
+
     bot.telegram.send_location(chat_id=query.message.chat_id,
                                longitude=venue['location']['long'],
                                latitude=venue['location']['lat'])
+
+    reply_markup = build_result_keyboard(results[cur_result], cur_result, len(results) - 1)
+    bot.telegram.send_message(query.u_id, SEARCH_RESULT.render(
+        venue=results[cur_result]
+    ), reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 
 def previous_result_callback(query, bot):
@@ -147,6 +166,7 @@ def next_result_callback(query, bot):
 def edit_current_result(venue, cur_result, query, results, bot):
     bot.telegram.editMessageText(
         text=SEARCH_RESULT.render(venue=venue),
+        parse_mode=telegram.ParseMode.MARKDOWN,
         chat_id=query.message.chat_id,
         message_id=query.message.message_id
     )
@@ -158,6 +178,7 @@ def edit_current_result(venue, cur_result, query, results, bot):
 
 
 def round_rating(value):
+    value = value / 10 * 5
     if value - int(value) >= 0.5:
         return int(value) + 1
     else:
