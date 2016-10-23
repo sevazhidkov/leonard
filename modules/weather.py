@@ -36,17 +36,19 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every minute', (['interval'], {'minutes': 1}, 'minute')),
-    ('Every hour', (['interval'], {'hours': 1}, 'hour')),
+    ('Every morning', 'morning'),
+    ('Before rain', 'rain'),
 ])
 
 
 def register(bot):
     bot.handlers['weather-show'] = show_weather
     bot.handlers['weather-change'] = change_weather
-    bot.handlers['weather-hour'] = hour_forecast
+    bot.handlers['weather-morning'] = morning_forecast
+    bot.handlers['weather-rain'] = morning_forecast
 
-    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, eval_show_weather))
+    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_weather))
+    # bot.subscriptions.append(('{}:rain'.format(NAME), check_show_weather_rain, send_show_weather))
 
 
 def check_show_weather_morning(bot):
@@ -61,17 +63,36 @@ def check_show_weather_morning(bot):
     return result
 
 
-def eval_show_weather(bot, users):
-    pass
+# def check_show_weather_rain(bot):
+#     result = []
+#     for user in map(lambda x: x.decode('utf-8'), bot.redis.keys('user:*:location')):
+#         u_id = user.split(':')[1]
+#         user = send(bot.redis.get(user).decode('utf-8'))
+#         timezone = pytz.timezone(user['timezone'])
+#         time = datetime.datetime.now(timezone)
+#         if time.hour == 10:
+#             result.append(int(u_id))
+#     return result
 
 
-def show_weather(message, bot):
-    bot.user_set(message.u_id, 'next_handler', 'weather-change')
-    bot.telegram.send_message(message.u_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
+def send_show_weather(bot, users):
+    if not users:
+        return
+    for user in users:
+        show_weather(None, bot, user)
+
+
+def show_weather(message, bot, u_id=None):
+    if message:
+        user_id = message.u_id
+    else:
+        user_id = u_id
+    bot.user_set(user_id, 'next_handler', 'weather-change')
+    bot.telegram.send_message(user_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
                               reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
-    location = json.loads(bot.user_get(message.u_id, 'location'))
-    text, reply_markup = build_basic_forecast(location, message, bot)
-    bot.telegram.send_message(message.u_id, text,
+    location = json.loads(bot.user_get(user_id, 'location'))
+    text, reply_markup = build_basic_forecast(location, user_id, bot)
+    bot.telegram.send_message(user_id, text,
                               reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
@@ -86,10 +107,10 @@ def change_weather(message, bot):
         bot.call_handler(message, 'main-menu')
 
 
-def build_basic_forecast(location, message, bot):
+def build_basic_forecast(location, user_id, bot):
     weather_data = get_weather(location['lat'], location['long'])
     bot.logger.info('Weather information: {}'.format(weather_data))
-    bot.user_set(message.u_id, 'weather:data', json.dumps(weather_data))
+    bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
     reply_markup = telegram.ReplyKeyboardMarkup(
         [[telegram.KeyboardButton(HOUR_FORECAST_BUTTON),
           telegram.KeyboardButton(OTHER_LOCATION_BUTTON, request_location=True)],
@@ -102,10 +123,10 @@ def build_basic_forecast(location, message, bot):
         day_summary=weather_data['hourly']['summary'],
         data=str(weather_data)[:100]
     )
-    return (weather_message, reply_markup)
+    return weather_message, reply_markup
 
 
-def hour_forecast(message, bot):
+def morning_forecast(message, bot):
     weather_data = json.loads(bot.user_get(message.u_id, 'weather:data'))
     hours = []
     for i in range(0, min(16, len(weather_data['hourly']['data'])), 3):
