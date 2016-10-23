@@ -90,6 +90,6 @@ def set_subscription(message, bot: Leonard):
         return
 
     subscription = bot.available_subscriptions[plugin][subscription]
-    bot.scheduler.add_job(bot.call_handler, args=(message, 'weather-show'), *subscription[0],
-                          **subscription[1])
+
+    bot.user_set(message.u_id, 'subscriptions:{}:{}'.format(plugin, subscription[-1]), 1)
     pass
