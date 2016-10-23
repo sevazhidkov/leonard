@@ -37,8 +37,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every minute', (['interval'], {'minutes': 1}, 'minute')),
-    ('Every hour', (['interval'], {'hours': 1}, 'hour')),
+    ('Every morning', 'morning'),
+    ('Before rain', 'rain'),
 ])
 
 
@@ -48,7 +48,8 @@ def register(bot):
     bot.handlers['weather-morning'] = morning_forecast
     bot.handlers['weather-rain'] = morning_forecast
 
-    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, eval_show_weather))
+    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_weather))
+    # bot.subscriptions.append(('{}:rain'.format(NAME), check_show_weather_rain, send_show_weather))
 
 
 def check_show_weather_morning(bot):
@@ -60,44 +61,6 @@ def check_show_weather_morning(bot):
         time = datetime.datetime.now(timezone)
         if time.hour == 10:
             result.append(int(u_id))
-    return result
-
-
-def eval_show_weather(bot, users):
-    pass
-
-
-
-def check_show_weather_morning(bot: Leonard):
-    users = bot.redis.keys('user:*notifications:{}:{}'.format(NAME, 'morning'))
-    return check_show_weather_condition(
-        bot,
-        lambda timezone: ('morning', arrow.now(timezone).datetime.hour in (8, 9, 10)),
-        map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
-    )
-
-
-def check_show_weather_evening(bot: Leonard):
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening'))
-    return check_show_weather_condition(
-        bot,
-        lambda timezone: ('evening', arrow.now(timezone).datetime.hour in (19, 20, 21)),
-        map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
-    )
-
-
-def check_show_weather_condition(bot: Leonard, condition, users):
-    result = []
-    for u_id in users:
-        location = bot.redis.get('user:{}:location'.format(u_id))
-        if not location:
-            continue
-        user = eval(location.decode('utf-8'))
-        timezone = pytz.timezone(user['timezone'])
-        name, correct = condition(timezone)
-        if correct and (bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0) <= 0:
-            result.append(int(u_id))
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, 24 * 60 * 60)
     return result
 
 
@@ -117,22 +80,19 @@ def send_show_weather(bot, users):
     if not users:
         return
     for user in users:
-        show_weather(None, bot, user, True)
+        show_weather(None, bot, user)
 
 
-def show_weather(message, bot, u_id=None, subscription=False):
+def show_weather(message, bot, u_id=None):
     if message:
         user_id = message.u_id
     else:
         user_id = u_id
-    if not subscription:
-        bot.user_set(user_id, 'next_handler', 'weather-change')
-        bot.telegram.send_message(user_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
-                                  reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
+    bot.user_set(user_id, 'next_handler', 'weather-change')
+    bot.telegram.send_message(user_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
+                              reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
     location = json.loads(bot.user_get(user_id, 'location'))
     text, reply_markup = build_basic_forecast(location, user_id, bot)
-    if subscription:
-        reply_markup = None
     bot.telegram.send_message(user_id, text,
                               reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -148,7 +108,7 @@ def change_weather(message, bot):
         bot.call_handler(message, 'main-menu')
 
 
-def build_basic_forecast(location, message, bot):
+def build_basic_forecast(location, user_id, bot):
     weather_data = get_weather(location['lat'], location['long'])
     bot.logger.info('Weather information: {}'.format(weather_data))
     bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
