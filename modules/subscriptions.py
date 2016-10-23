@@ -50,6 +50,7 @@ def subscriptions_setup_result(message, bot):
     )
     if key:
         bot.user_set(message.u_id, key, 1)
+        bot.redis.expire('user:{}:{}'.format(message.u_id, key), 24*60*60)
     bot.call_handler(message, 'welcome-location-setup')
 
 
@@ -92,4 +93,6 @@ def set_subscription(message, bot: Leonard):
 
     subscription = bot.available_subscriptions[plugin][subscription]
     bot.user_set(message.u_id, 'notifications:{}:{}'.format(plugin, subscription), 1)
-    pass
+    bot.telegram.send_message(message.u_id, 'You have been successfully subscribed to "{}"'.format(message.text),
+                              reply_markup=telegram.ReplyKeyboardHide(), parse_mode=telegram.ParseMode.MARKDOWN)
+    bot.call_handler(message, 'main-menu')
