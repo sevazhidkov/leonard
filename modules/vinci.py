@@ -67,6 +67,9 @@ def results_iteration(message, bot):
     if 'menu' in message.text:
         bot.call_handler(message, 'main-menu')
         return
+    if message.photo:
+        bot.call_handler(message, 'vinci-results-view')
+        return
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-iteration')
     for (i, filter) in enumerate(filters):
         if filter['name'] in message.text:
