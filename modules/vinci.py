@@ -67,11 +67,14 @@ def results_iteration(message, bot):
     if 'menu' in message.text:
         bot.call_handler(message, 'main-menu')
         return
+    if message.photo:
+        bot.call_handler(message, 'vinci-results-view')
+        return
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-iteration')
-    for (i, filter) in enumerate(filters):
-        if filter['name'] in message.text:
+    for (i, filter_data) in enumerate(filters):
+        if filter_data['name'] in message.text:
             filter_num = i
-            new_filter = filter
+            new_filter = filter_data
             break
     else:
         if '⏮' in message.text:
@@ -103,11 +106,11 @@ def build_results_keyboard(filter_num, message, bot):
     # All filters buttons
     filters_per_row = 3
     current_row = []
-    for filter in filters:
+    for filter_data in filters:
         if len(current_row) == filters_per_row:
             keyboard.append(current_row)
             current_row = []
-        current_row.append(filter['name'] + ' ' + filter['emoji'])
+        current_row.append(filter_data['name'] + ' ' + filter_data['emoji'])
     if current_row:
         keyboard.append(current_row)
     return telegram.ReplyKeyboardMarkup(keyboard)
