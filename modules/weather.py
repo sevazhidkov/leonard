@@ -6,6 +6,7 @@ import requests
 import telegram
 import jinja2
 import pytz
+import time
 
 from leonard import Leonard
 from modules.location import set_location
@@ -14,9 +15,13 @@ NAME = 'Weather'
 
 WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n\n{{ day_summary }}")
-HOUR_FORECAST_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour hour weather forecast:\n\n{% for hour in hours %}"
+FORECAST_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n{% for hour in hours %}"
                                         "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
                                         "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
+
+RAIN_SOON = jinja2.Template("☔ ☔ ☔\nThere will be rain soon:\n\n{% for hour in hours %}"
+                            "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
+                            "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
 ENDPOINT_URL = 'https://api.darksky.net/forecast/{}'.format(os.environ['DARKSKY_TOKEN'])
 
 OTHER_LOCATION_BUTTON = 'Send other location 📍'
@@ -45,19 +50,19 @@ SUBSCRIBES = collections.OrderedDict([
 def register(bot):
     bot.handlers['weather-show'] = show_weather
     bot.handlers['weather-change'] = change_weather
-    bot.handlers['weather-morning'] = morning_forecast
-    bot.handlers['weather-rain'] = morning_forecast
+    bot.handlers['weather-hour'] = hour_forecast
 
-    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_weather))
-    bot.subscriptions.append(('{}:evening'.format(NAME), check_show_weather_evening, send_show_weather))
-    # bot.subscriptions.append(('{}:rain'.format(NAME), check_show_weather_rain, send_show_weather))
+    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_forecast))
+    bot.subscriptions.append(('{}:evening'.format(NAME), check_show_weather_evening, send_show_forecast))
+    bot.subscriptions.append(('{}:rain'.format(NAME), check_send_notification_rain, send_notification_rain))
 
 
 def check_show_weather_morning(bot: Leonard):
     users = bot.redis.keys('user:*notifications:{}:{}'.format(NAME, 'morning'))
     return check_show_weather_condition(
         bot,
-        lambda timezone: ('morning', arrow.now(timezone).datetime.hour in (8, 9, 10)),
+        'morning',
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (8, 9, 10),
         users
     )
 
@@ -66,32 +71,58 @@ def check_show_weather_evening(bot: Leonard):
     users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening'))
     return check_show_weather_condition(
         bot,
-        lambda timezone: ('evening', arrow.now(timezone).datetime.hour in (19, 20, 21)),
+        'evening',
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 23),
         users
     )
 
 
-def check_show_weather_condition(bot: Leonard, condition, users, expire=24 * 60 * 60):
+def check_send_notification_rain(bot: Leonard):
+    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'rain'))
     users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
     result = []
+
+    def condition(location, uid=None):
+        data = bot.user_get(uid, 'weather:data')
+        if not data or time.time() - int(json.loads(data)['currently']['time']) > 3600:
+            build_basic_forecast(location, uid, bot)
+            weather_data = json.loads(bot.user_get(uid, 'weather:data'))
+        else:
+            weather_data = json.loads(data)
+        return any(['rain' in x['summary'].lower() for x in weather_data['hourly']['data'][1:5]])
+
     for u_id in users:
-        location = bot.redis.get('user:{}:location'.format(u_id))
-        if not location:
+        user_location = bot.user_get(u_id, 'location')
+        if not user_location:
             continue
-        user = eval(location.decode('utf-8'))
-        timezone = pytz.timezone(user['timezone'])
-        name, correct = condition(timezone)
-        if correct and (bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0) <= 0:
-            result.append(int(u_id))
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
+        if condition(json.loads(user_location), u_id) and (
+                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, 'rain')) or 0
+        ) <= 0:
+            result.append(u_id)
+            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, 'rain'), 1, 24 * 60 * 60)
     return result
 
 
-def send_show_weather(bot, users):
-    if not users:
-        return
-    for user in users:
-        show_weather(None, bot, user, True)
+def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24 * 60 * 60):
+    users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
+    result = []
+    for u_id in users:
+        location = bot.user_get(u_id, 'location')
+        if not location:
+            continue
+        user = json.loads(location)
+        timezone = pytz.timezone(user['timezone'])
+        if condition(timezone) and (
+                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
+        ) <= 0:
+            result.append(int(u_id))
+            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
+    return result, name
+
+
+def send_notification_rain(bot, users):
+    for u_id in users:
+        hour_forecast(None, bot, None, RAIN_SOON, u_id, 'rain')
 
 
 def show_weather(message, bot, u_id=None, subscription=False):
@@ -141,8 +172,34 @@ def build_basic_forecast(location, user_id, bot):
     return weather_message, reply_markup
 
 
-def morning_forecast(message, bot):
-    weather_data = json.loads(bot.user_get(message.u_id, 'weather:data'))
+def send_show_forecast(bot, args):
+    for u_id in args[0]:
+        data = bot.user_get(u_id, 'weather:data')
+        if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
+            location = bot.user_get(u_id, 'location')
+            build_basic_forecast(location, u_id, bot)
+            weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
+        else:
+            weather_data = json.loads(data)
+        hours = []
+        for i in range(0, min(16, len(weather_data['hourly']['data'])), 3):
+            hour_weather = weather_data['hourly']['data'][i]
+            hours.append({
+                'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
+                'temperature': hour_weather['temperature'],
+                'summary': hour_weather['summary'],
+                'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
+            })
+        bot.telegram.send_message(u_id, FORECAST_MESSAGE.render(name=args[1], hours=hours),
+                                  parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+def hour_forecast(message, bot, name=None, to_render=FORECAST_MESSAGE, u_id=None, only=None):
+    if message:
+        user_id = message.u_id
+    else:
+        user_id = u_id
+    weather_data = json.loads(bot.user_get(user_id, 'weather:data'))
     hours = []
     for i in range(0, min(16, len(weather_data['hourly']['data'])), 3):
         hour_weather = weather_data['hourly']['data'][i]
@@ -152,8 +209,11 @@ def morning_forecast(message, bot):
             'summary': hour_weather['summary'],
             'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
         })
-    bot.telegram.send_message(message.u_id, HOUR_FORECAST_MESSAGE.render(hours=hours),
-                              reply_markup=telegram.ReplyKeyboardHide(),
+    if only:
+        hours = [x for x in hours[1:] if only in x['summary'].lower()]
+    reply_markup = None if only else telegram.ReplyKeyboardHide()
+    bot.telegram.send_message(user_id, to_render.render(name=name, hours=hours),
+                              reply_markup=reply_markup,
                               parse_mode=telegram.ParseMode.MARKDOWN)
 
 
