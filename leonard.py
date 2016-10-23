@@ -69,7 +69,7 @@ class Leonard:
         try:
             self.handlers[current_handler](message, self)
         except Exception as error:
-            bot.logger.error(error)
+            self.logger.error(error)
             self.telegram.send_message(message.u_id,
                                        "Ooops, something that I don't understand happen. "
                                        "Don't worry, my developer already notificated.")
