@@ -5,7 +5,7 @@ MENU = [
     [('handler', 'Places ☕ 🍝 🏨', 'foursquare-location-choice'),
      ('handler', 'Weather 🌤 ☔️ ⛄️', 'weather-show')],
     [('handler', 'Beautiful Vinci filters 🌇 🏙 🌃', 'vinci-upload-image'),
-     ('handler', 'Subscribes 📬', 'subscriptions-show')
+     ('handler', 'Subscriptions 📬', 'subscriptions-show')
      ]
 ]
 
