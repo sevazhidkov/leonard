@@ -36,8 +36,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('Every morning', 'morning'),
-    ('Every evening', 'evening'),
+    ('Every morning from 8AM to 10AM', 'morning'),
+    ('Every evening from 19AM to 21AM', 'evening'),
     ('Before rain', 'rain'),
 ])
 
