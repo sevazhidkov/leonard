@@ -50,7 +50,7 @@ def subscriptions_setup_result(message, bot):
     )
     if key:
         bot.user_set(message.u_id, key, 1)
-        bot.redis.expire('user:{}:{}'.format(message.u_id, key), 24*60*60)
+        bot.redis.expire('user:{}:{}'.format(message.u_id, key), 24 * 60 * 60)
     bot.call_handler(message, 'welcome-location-setup')
 
 
@@ -59,6 +59,7 @@ def show_subscriptions(message, bot: Leonard):
     reply_markup = telegram.ReplyKeyboardMarkup(
         [[telegram.KeyboardButton(subscription)] for subscription in bot.available_subscriptions.keys()]
     )
+    reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
     bot.telegram.send_message(message.u_id, 'There are {} subscribe sources'.format(len(bot.available_subscriptions)),
                               reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
     pass
@@ -72,6 +73,7 @@ def choose_subscriptions(message, bot: Leonard):
             [[telegram.KeyboardButton('{} - {}'.format(message.text, subscription))] for subscription in
              chosen_subscriptions]
         )
+        reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
         bot.telegram.send_message(message.u_id, 'There are {} subscription types'.format(len(chosen_subscriptions)),
                                   reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
     else:
