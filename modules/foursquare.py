@@ -106,9 +106,13 @@ def search_results(message, bot):
         bot.call_handler(message, 'main-menu')
         return
     reply_markup = build_result_keyboard(results[0], 0, len(results) - 1)
-    bot.telegram.send_message(message.u_id, SEARCH_RESULT.render(
-        venue=results[0]
-    ), reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
+    bot.telegram.send_message(
+        message.u_id,
+        SEARCH_RESULT.render(
+            venue=results[0]
+        ),
+        reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN
+    )
 
 
 def get_location_callback(query, bot):
@@ -126,16 +130,20 @@ def get_location_callback(query, bot):
     except telegram.error.BadRequest:
         pass
 
-    bot.telegram.send_location(chat_id=query.message.chat_id,
-                               longitude=venue['location']['long'],
-                               latitude=venue['location']['lat'])
+    bot.telegram.send_location(
+        chat_id=query.message.chat_id,
+        longitude=venue['location']['long'],
+        latitude=venue['location']['lat']
+    )
 
     reply_markup = build_result_keyboard(results[cur_result], cur_result, len(results) - 1)
-    bot.telegram.send_message(query.u_id,
-                              SEARCH_RESULT.render(venue=results[cur_result]),
-                              reply_markup=reply_markup,
-                              parse_mode=telegram.ParseMode.MARKDOWN)
+    bot.telegram.send_message(
+        query.u_id,
+        SEARCH_RESULT.render(venue=results[cur_result]),
+        reply_markup=reply_markup,
+        parse_mode=telegram.ParseMode.MARKDOWN
 
+    )
 
 
 def previous_result_callback(query, bot):
