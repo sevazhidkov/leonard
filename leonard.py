@@ -84,10 +84,10 @@ class Leonard:
             self.handlers[current_handler](message, self)
         except Exception as error:
             self.logger.error(error)
-            self.telegram.send_message(message.u_id,
-                                       "Ooops, something that I don't understand happened. "
-                                       "Don't worry, my developer already notified.")
-            self.call_handler(message, 'main-menu')
+
+            self.user_set(message.u_id, 'handler', self.default_handler)
+
+            return
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
