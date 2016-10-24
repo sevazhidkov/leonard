@@ -72,7 +72,7 @@ def check_show_weather_evening(bot: Leonard):
     return check_show_weather_condition(
         bot,
         'evening',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 23),
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 21),
         users
     )
 
@@ -99,11 +99,11 @@ def check_send_notification_rain(bot: Leonard):
                     bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, 'rain')) or 0
         ) <= 0:
             result.append(u_id)
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, 'rain'), 1, 24 * 60 * 60)
+            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, 'rain'), 1, 5*60*60)
     return result
 
 
-def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24 * 60 * 60):
+def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24 * 30 * 60):
     users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
     result = []
     for u_id in users:
