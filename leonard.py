@@ -73,10 +73,10 @@ class Leonard:
             if self.debug:
                 raise error
             self.logger.error(error)
-            self.telegram.send_message(message.u_id,
-                                       "Ooops, something that I don't understand happen. "
-                                       "Don't worry, my developer already notificated.")
-            self.call_handler(message, 'main-menu')
+
+            self.user_set(message.u_id, 'handler', self.default_handler)
+
+            return
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
@@ -86,16 +86,11 @@ class Leonard:
         try:
             self.callback_handlers[handler_name](query, self)
         except Exception as error:
-            self.telegram.answerCallbackQuery(callback_query_id=query.id)
-            
             if self.debug:
                 raise error
             self.logger.error(error)
 
-            self.telegram.send_message(query.u_id,
-                                       "Ooops, something that I don't understand happen. "
-                                       "Don't worry, my developer already notificated.")
-            self.call_handler(query.message, 'main-menu')
+            self.user_set(message.u_id, 'handler', self.default_handler)
 
             return
 
