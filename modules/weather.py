@@ -176,7 +176,7 @@ def send_show_forecast(bot, args):
     for u_id in args[0]:
         data = bot.user_get(u_id, 'weather:data')
         if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
-            location = bot.user_get(u_id, 'location')
+            location = json.loads(bot.user_get(u_id, 'location'))
             build_basic_forecast(location, u_id, bot)
             weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
         else:
