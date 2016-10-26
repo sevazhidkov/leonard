@@ -46,6 +46,7 @@ def results_view(message, bot):
         return
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-iteration')
     bot.telegram.send_message(message.u_id, WAIT_A_SECOND)
+    bot.telegram.sendChatAction(message.u_id, 'upload_photo')
     file_id = message.photo[-1].file_id
     photo = bot.telegram.getFile(file_id)
     bot.logger.info('Photo for Vinci url: {}'.format(photo.file_path))
@@ -71,6 +72,7 @@ def results_iteration(message, bot):
         bot.call_handler(message, 'vinci-results-view')
         return
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-iteration')
+    bot.telegram.sendChatAction(message.u_id, 'upload_photo')
     for (i, filter_data) in enumerate(filters):
         if filter_data['name'] in message.text:
             filter_num = i
