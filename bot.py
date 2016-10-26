@@ -43,7 +43,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'polling':
     while True:
         try:
             for update in telegram_client.getUpdates(offset=update_id, timeout=10):
-                chat_id = update.message.chat_id
                 update_id = update.update_id + 1
                 bot.process_update(update)
         except NetworkError:
