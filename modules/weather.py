@@ -39,8 +39,6 @@ def register(bot):
 
 def show_weather(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'weather-change')
-    bot.telegram.send_message(message.u_id, "Hold on, I'm loading weather information powered by Forecast.io ⌛",
-                              reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
     location = json.loads(bot.user_get(message.u_id, 'location'))
     text, reply_markup = build_basic_forecast(location, message, bot)
     bot.telegram.send_message(message.u_id, text,
