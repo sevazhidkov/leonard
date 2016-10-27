@@ -1,0 +1,32 @@
+#!wing
+#!version=5.0
+##################################################################
+# Wing IDE project file                                          #
+##################################################################
+[project attributes]
+console.toolbox = [{'autosave': False,
+                    'cmd': 'D:\\programms\\Git\\usr\\bin\\bash.exe',
+                    'env': ('merge',
+                            [u'TOK=TO']),
+                    'id': 'cmd-RNFBQWZCLbgCynM7',
+                    'io_encoding': 'utf_16',
+                    'key_binding': '',
+                    'line_mode': True,
+                    'pseudo_tty': False,
+                    'pypath': ('project',
+                               ''),
+                    'raise_panel': True,
+                    'rundir': ('project',
+                               u''),
+                    'title': 'Bash'}]
+proj.directory-list = [{'dirloc': loc('.'),
+                        'excludes': (),
+                        'filter': u'*',
+                        'include_hidden': False,
+                        'recursive': True,
+                        'watch_for_changes': True}]
+proj.file-type = 'shared'
+proj.launch-config = {loc('../../programms/python/WinPython/python-3.4.4/Lib/os.py'): ('p'\
+        'roject',
+        (u'BOT_TOKEN=172185533:AAFxbrBuVxPFj6ckMIqPraIv81c19Rad34Q\nMAPBOX_ACCESS_TOKEN="pk.eyJ1Ijoic2V2YXpoaWRrb3YiLCJhIjoiY2lsZ3I5c3NuMDA1OXc5bTRycmc2NDF3NCJ9.eMNHdCsfWVOD88N7jlWwog"\nREDIS_URL=redis-14336.c8.us-east-1-3.ec2.cloud.redislabs.com:14336\nWEBHOOK_HOSTNAME=https://9e2ea35a.ngrok.io\nFOURSQUARE_CLIENT_ID="PB4QYRBDRPABV5GN1UIBHSVYDKIZHPJ5ROCHREDBILRMAVRL"\nFOURSQUARE_CLIENT_SECRET="HFBMMVSEQ1OHOCIR2PFDWZ42PTBF14D0OBNBOAX0VWJXP4DD"\nDARKSKY_TOKEN="6baa31757d8fb361aea5bfb54d2d10db"\nNEWS_API_TOKEN=7a29c414291346f1bb49dac6924216a4',
+         ''))}

@@ -90,7 +90,7 @@ class Leonard:
                 raise error
             self.logger.error(error)
 
-            self.user_set(message.u_id, 'handler', self.default_handler)
+            self.user_set(query.message.u_id, 'handler', self.default_handler)
 
             return
 
