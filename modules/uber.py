@@ -1,6 +1,10 @@
 import os
+import requests
 import telegram
 from flask import request, redirect
+
+from libs.shrt import short_user_link
+from libs.utils import build_bot
 
 OAUTH_START_INVITE_FIRST = "Oh, it looks like you didn't connected your Uber account 🤔"
 OAUTH_START_INVITE_SECOND = ("Don't worry, it's easy and you should do it only once.\n"
@@ -8,8 +12,10 @@ OAUTH_START_INVITE_SECOND = ("Don't worry, it's easy and you should do it only o
 
 CLIENT_ID = os.environ['UBER_CLIENT_ID']
 CLIENT_SECRET = os.environ['UBER_CLIENT_SECRET']
+REDIRECT_URL = os.environ['UBER_REDIRECT_URL']
 
 AUTH_URL = "https://login.uber.com/oauth/v2/authorize?client_id={}&response_type=code"
+TOKEN_URL = "https://login.uber.com/oauth/v2/token"
 
 
 def register(bot):
@@ -29,7 +35,10 @@ def choose_location(message, bot):
 
 def oauth_start(message, bot):
     keyboard = telegram.InlineKeyboardMarkup([
-        [telegram.InlineKeyboardButton('Connect to Uber 🚘', url=AUTH_URL.format(CLIENT_ID))],
+        [telegram.InlineKeyboardButton(
+            'Connect to Uber 🚘',
+            url=short_user_link(message.u_id, AUTH_URL.format(CLIENT_ID))
+        )],
         [telegram.InlineKeyboardButton(bot.MENU_BUTTON, callback_data='main-menu-callback')]
     ])
     bot.send_message(message.u_id, OAUTH_START_INVITE_FIRST, reply_markup=telegram.ReplyKeyboardHide())
@@ -37,5 +46,16 @@ def oauth_start(message, bot):
 
 
 def oauth_redirect():
-    print(request.params)
+    code = request.args.get('code')
+    access_data = requests.post(TOKEN_URL, data={
+        'client_secret': CLIENT_SECRET,
+        'client_id': CLIENT_ID,
+        'grant_type': 'authorization_code',
+        'redirect_uri': REDIRECT_URL,
+        'code': code
+    }).json()
+    print(access_data)
+    print(request.cookies)
+    bot = build_bot()
+
     return redirect('https://telegram.me/leonardbot')
