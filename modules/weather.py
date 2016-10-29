@@ -19,6 +19,11 @@ FORECAST_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather fore
                                    "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
                                    "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
 
+SUMMARY_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n"
+                                  "_{{ summary }}_ {{ emoji }}\n"
+                                  "_Wind speed_ - *{{ wind_speed }} MPH*\n"
+                                  "_Temperature_ - *{{ temperature_min }} ℉ - {{ temperature_max }} ℉*\n")
+
 RAIN_SOON = jinja2.Template("☔ ☔ ☔\nThere will be rain soon:\n\n{% for hour in hours %}"
                             "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
                             "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
@@ -42,7 +47,7 @@ WEATHER_ICONS = {
 
 SUBSCRIBES = collections.OrderedDict([
     ('From 8AM to 10AM', ['morning', 'Now you will get morning forecast!', (8, 9, 10)]),
-    ('From 19AM to 21AM', ['evening', 'Now you will get evening forecast!', (19, 20, 21, 22)]),
+    ('From 19AM to 21AM', ['evening', 'Now you will get evening forecast!', (19, 20, 21, 23)]),
     ('Before rain', ['rain']),
 ])
 
@@ -53,7 +58,7 @@ def register(bot):
     bot.handlers['weather-hour'] = hour_forecast
 
     bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_forecast))
-    bot.subscriptions.append(('{}:evening'.format(NAME), check_show_weather_evening, send_show_forecast))
+    bot.subscriptions.append(('{}:evening'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
     bot.subscriptions.append(('{}:rain'.format(NAME), check_send_notification_rain, send_notification_rain))
 
 
@@ -119,7 +124,7 @@ def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24
         if condition(timezone) and (
                     bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
         ) <= 0:
-            result.append(int(u_id))
+            result.append([int(u_id), arrow.now(timezone).datetime.hour])
             bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
     return result, name
 
@@ -176,8 +181,40 @@ def build_basic_forecast(location, user_id, bot):
     return weather_message, reply_markup
 
 
+def send_show_forecast_evening(bot, args):
+    for u_id, u_hour in args[0]:
+        data = bot.user_get(u_id, 'weather:data')
+        if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
+            location = json.loads(bot.user_get(u_id, 'location'))
+            build_basic_forecast(location, u_id, bot)
+            weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
+        else:
+            weather_data = json.loads(data)
+        hours = []
+        for i in range(0, min(25 - u_hour, len(weather_data['hourly']['data']))):
+            hour_weather = weather_data['hourly']['data'][i]
+            hours.append({
+                'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
+                'temperature': hour_weather['temperature'],
+                'summary': hour_weather['summary'],
+                'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
+            })
+        text = FORECAST_MESSAGE.render(name=args[1], hours=hours)
+        tomorrow = weather_data['daily']['data'][1]
+        text += '\n\n' + SUMMARY_MESSAGE.render(
+            name='tomorrow',
+            summary=tomorrow['summary'],
+            wind_speed=tomorrow['windSpeed'],
+            emoji=WEATHER_ICONS.get(tomorrow['icon'], ''),
+            temperature_min=tomorrow['temperatureMin'],
+            temperature_max=tomorrow['temperatureMax']
+        )
+
+        bot.telegram.send_message(u_id, text, parse_mode=telegram.ParseMode.MARKDOWN)
+
+
 def send_show_forecast(bot, args):
-    for u_id in args[0]:
+    for u_id, _ in args[0]:
         data = bot.user_get(u_id, 'weather:data')
         if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
             location = json.loads(bot.user_get(u_id, 'location'))
