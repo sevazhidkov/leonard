@@ -97,6 +97,8 @@ class Leonard:
         try:
             self.callback_handlers[handler_name](query, self)
         except Exception as error:
+            self.telegram.answerCallbackQuery(callback_query_id=query.id)
+
             if self.debug:
                 raise error
             self.logger.error(error)
@@ -125,6 +127,11 @@ class Leonard:
         key = 'user:{}:{}'.format(user_id, field)
         self.redis.set(key, value)
         logger.info('redis set {} => {}'.format(key, value))
+
+    def user_delete(self, user_id, field):
+        key = 'user:{}:{}'.format(user_id, field)
+        self.redis.delete(key)
+        logger.info('redis delete {}'.format(key))
 
 
 def call_handler(bot, message, name):
