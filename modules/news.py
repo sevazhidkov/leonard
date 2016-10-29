@@ -6,7 +6,7 @@ import jinja2
 import redis
 import telegram
 
-NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n{{entry.description}}\n\n{{entry.url}}")
+NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n\n{{entry.description}}\n\n{{entry.url}}")
 NEWS_API_URL = jinja2.Template("https://newsapi.org/v1/articles?source={{source}}&apiKey={{api_key}}")
 NEWS_API_TOKEN = os.environ.get("NEWS_API_TOKEN","7a29c414291346f1bb49dac6924216a4")
 NEWS_SOURCE = "google-news"
