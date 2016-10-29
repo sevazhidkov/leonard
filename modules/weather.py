@@ -41,9 +41,9 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('From 8AM to 10AM', 'morning'),
-    ('From 19AM to 21AM', 'evening'),
-    ('Before rain', 'rain'),
+    ('From 8AM to 10AM', ['morning', 'Now you will get morning forecast!']),
+    ('From 19AM to 21AM', ['evening']),
+    ('Before rain', ['rain']),
 ])
 
 
@@ -72,7 +72,7 @@ def check_show_weather_evening(bot: Leonard):
     return check_show_weather_condition(
         bot,
         'evening',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 21),
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 21, 22),
         users
     )
 
@@ -93,7 +93,7 @@ def check_send_notification_weather(bot: Leonard, weather):
             weather_data = json.loads(bot.user_get(uid, 'weather:data'))
         else:
             weather_data = json.loads(data)
-        return any([weather in x['summary'].lower() for x in weather_data['hourly']['data'][1:5]])
+        return any([weather in x['summary'].lower() for x in weather_data['hourly']['data'][1:24]])
 
     for u_id in users:
         user_location = bot.user_get(u_id, 'location')
