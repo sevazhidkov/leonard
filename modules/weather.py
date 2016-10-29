@@ -41,8 +41,8 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('From 8AM to 10AM', ['morning', 'Now you will get morning forecast!']),
-    ('From 19AM to 21AM', ['evening']),
+    ('From 8AM to 10AM', ['morning', 'Now you will get morning forecast!', (8, 9, 10)]),
+    ('From 19AM to 21AM', ['evening', 'Now you will get evening forecast!', (19, 20, 21, 22)]),
     ('Before rain', ['rain']),
 ])
 
@@ -62,7 +62,7 @@ def check_show_weather_morning(bot: Leonard):
     return check_show_weather_condition(
         bot,
         'morning',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (8, 9, 10),
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['From 8AM to 10AM'][2],
         users
     )
 
@@ -72,7 +72,7 @@ def check_show_weather_evening(bot: Leonard):
     return check_show_weather_condition(
         bot,
         'evening',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in (19, 20, 21, 22),
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['From 19AM to 21AM'][2],
         users
     )
 
