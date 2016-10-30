@@ -24,6 +24,13 @@ ORDER_ERROR = "Unfortunally I can't process this order 😒\n\nMy developer noti
 ORDER_CARD = jinja2.Template("*Uber order 🚘*\n\n"
                              "_Your order has been sent to Uber. I will send you "
                              "all updates._")
+UPDATE_CARD = jinja2.Template("_{% if data.status == \"accepted\" %}Uber found a driver and the car goes to you.{% endif %}"
+                              "{% if data.status == \"arriving\" %}Driver has arrived or will arrive very shortly.{% endif %}"
+                              "{% if data.status == \"in_progress\" %}The Uber request in progress. Have a nice trip!{% endif %}"
+                              "{% if data.status == \"driver_canceled\" %}Unfortunally, driver cancelled your Uber "
+                              "request. You can make order again. {% endif %}"
+                              "{% if data.status == \"completed\" %}Your Uber trip is completed. "
+                              "Thanks for using me to get Uber 😊{% endif %}_")
 
 HOME_BUTTON = '🏡 Home'
 WORK_BUTTON = '👔 Work'
@@ -191,6 +198,10 @@ def confirm_order(message, bot):
         return
 
     bot.user_set(message.u_id, 'uber:request_id', response['request_id'])
+    bot.redis.sadd('uber:requested_users', message.u_id)
+    bot.user_set(message.u_id, 'uber:request_stage', 'processing')
+
+    bot.call_handler(message, 'main-menu')
     bot.send_message(message.u_id, ORDER_CARD.render(data=response),
                      reply_markup=make_order_keyboard(bot, message.u_id, response),
                      parse_mode=telegram.ParseMode.MARKDOWN)
@@ -256,6 +267,7 @@ def cancel_order(query, bot):
         'Authorization': 'Bearer {}'.format(token),
         'Content-Type': 'application/json',
     })
+    bot.redis.srem('uber:requested_users', query.u_id)
     bot.telegram.editMessageReplyMarkup(
         reply_markup=telegram.InlineKeyboardMarkup([]),
         chat_id=query.message.chat_id,
@@ -268,7 +280,6 @@ def cancel_order(query, bot):
 def make_order_keyboard(bot, u_id, data):
     if 'errors' in data:
         return telegram.InlineKeyboardMarkup([])
-    if data['status'] == 'processing':
-        return telegram.InlineKeyboardMarkup(
-            [[telegram.InlineKeyboardButton('Cancel order ❌', callback_data='uber-cancel-order')]]
-        )
+    return telegram.InlineKeyboardMarkup(
+        [[telegram.InlineKeyboardButton('Cancel order ❌', callback_data='uber-cancel-order')]]
+    )
