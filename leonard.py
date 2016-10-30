@@ -2,6 +2,7 @@ import os
 import logging
 import importlib
 
+import boto3
 from flask import Flask
 from redis import from_url
 
@@ -36,8 +37,10 @@ class Leonard:
 
         self.subscriptions = []
         self.available_subscriptions = {}
-
         self.tz = tzwhere.tzwhere()
+
+        self.dynamo = boto3.resource('dynamodb', 'eu-central-1')
+        self.nine_gag = self.dynamo.Table('9gag')
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
