@@ -4,7 +4,6 @@ import importlib
 
 from flask import Flask
 from redis import from_url
-from apscheduler.schedulers.background import BackgroundScheduler
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
@@ -35,8 +34,6 @@ class Leonard:
 
         self.logger = logger
 
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.start()
         self.subscriptions = []
         self.available_subscriptions = {}
 
@@ -103,7 +100,7 @@ class Leonard:
                 raise error
             self.logger.error(error)
 
-            self.user_set(message.u_id, 'handler', self.default_handler)
+            self.user_set(query.message.u_id, 'handler', self.default_handler)
 
             return
 
