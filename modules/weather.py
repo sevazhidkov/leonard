@@ -46,9 +46,9 @@ WEATHER_ICONS = {
 }
 
 SUBSCRIBES = collections.OrderedDict([
-    ('From 8AM to 10AM', ['morning', 'Now you will get morning forecast!', (8, 9, 10)]),
-    ('From 19AM to 21AM', ['evening', 'Now you will get evening forecast!', (19, 20, 21, 23)]),
-    ('Before rain', ['rain']),
+    ('Morning forecast 🌇', ['morning-forecast', 'Now you will get morning forecast!', (8, 9, 10)]),
+    ('Evening forecast 🌃', ['evening-forecast', 'Now you will get evening forecast!', (19, 20, 21, 22)]),
+    ('Before rain', ['rain-forecast']),
 ])
 
 
@@ -57,33 +57,33 @@ def register(bot):
     bot.handlers['weather-change'] = change_weather
     bot.handlers['weather-hour'] = hour_forecast
 
-    bot.subscriptions.append(('{}:morning'.format(NAME), check_show_weather_morning, send_show_forecast))
-    bot.subscriptions.append(('{}:evening'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
-    bot.subscriptions.append(('{}:rain'.format(NAME), check_send_notification_rain, send_notification_rain))
+    bot.subscriptions.append(('{}:morning-forecast'.format(NAME), check_show_weather_morning, send_show_forecast))
+    bot.subscriptions.append(('{}:evening-forecast'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
+    bot.subscriptions.append(('{}:rain-forecast'.format(NAME), check_send_notification_rain, send_notification_rain))
 
 
 def check_show_weather_morning(bot: Leonard):
-    users = bot.redis.keys('user:*notifications:{}:{}'.format(NAME, 'morning'))
+    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'morning-forecast'))
     return check_show_weather_condition(
         bot,
         'morning',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['From 8AM to 10AM'][2],
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['Morning forecast 🌇'][2],
         users
     )
 
 
 def check_show_weather_evening(bot: Leonard):
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening'))
+    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening-forecast'))
     return check_show_weather_condition(
         bot,
         'evening',
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['From 19AM to 21AM'][2],
+        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in SUBSCRIBES['Evening forecast 🌃'][2],
         users
     )
 
 
 def check_send_notification_rain(bot: Leonard):
-    return check_send_notification_weather(bot, 'rain')
+    return check_send_notification_weather(bot, 'rain-forecast')
 
 
 def check_send_notification_weather(bot: Leonard, weather):
@@ -98,7 +98,7 @@ def check_send_notification_weather(bot: Leonard, weather):
             weather_data = json.loads(bot.user_get(uid, 'weather:data'))
         else:
             weather_data = json.loads(data)
-        return any([weather in x['summary'].lower() for x in weather_data['hourly']['data'][1:24]])
+        return any([weather.rstrip('-forecast') in x['summary'].lower() for x in weather_data['hourly']['data'][1:24]])
 
     for u_id in users:
         user_location = bot.user_get(u_id, 'location')
@@ -121,8 +121,8 @@ def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24
             continue
         user = json.loads(location)
         timezone = pytz.timezone(user['timezone'])
-        if condition(timezone) and (
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
+        if condition(timezone) and ((
+                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0)
         ) <= 0:
             result.append([int(u_id), arrow.now(timezone).datetime.hour])
             bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)

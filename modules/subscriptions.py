@@ -56,11 +56,10 @@ def subscriptions_setup_result(message, bot: Leonard):
 def show_subscriptions(message, bot: Leonard):
     bot.user_set(message.u_id, 'next_handler', 'subscription-set')
     reply_markup = telegram.ReplyKeyboardMarkup(
-        [[telegram.KeyboardButton('{} - {} {}'.format(
-            name,
+        [[telegram.KeyboardButton('{} {}'.format(
             sub,
-            '✅' if get_subscription_status(bot, message.u_id, name, shortcut[0]) else '❌'
-        ))] for name, chosen_subscription in bot.available_subscriptions.items()
+            '✅' if get_subscription_status(bot, message.u_id, shortcut[0]) else '❌'
+        ))] for chosen_subscription in bot.available_subscriptions.values()
          for sub, shortcut in chosen_subscription.items()])
     reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
     bot.telegram.send_message(
@@ -72,21 +71,16 @@ def show_subscriptions(message, bot: Leonard):
 
 
 def set_subscription(message, bot: Leonard):
-    if len(message.text.split(' - ')) <= 1:
+    plugin = [name for name, y in bot.available_subscriptions.items() for _ in y.keys() if message.text.startswith(_)]
+    if not plugin:
         bot.call_handler(message, 'main-menu')
         return
-    plugin, subscription = message.text.split(' - ')
+    plugin = plugin[0]
+    subscription = message.text
     subscription = subscription[:-2]
-    if plugin not in bot.available_subscriptions:
-        bot.call_handler(message, 'main-menu')
-        return
-
-    if subscription not in bot.available_subscriptions[plugin]:
-        bot.call_handler(message, 'main-menu')
-        return
 
     subscription = bot.available_subscriptions[plugin][subscription]
-    if get_subscription_status(bot, message.u_id, plugin, subscription[0]):
+    if get_subscription_status(bot, message.u_id, subscription[0]):
         bot.user_delete(message.u_id, 'notifications:{}:{}'.format(plugin, subscription[0]))
         text = 'You have been successfully unsubscribed from "{}"'.format(message.text[:-2])
     else:
@@ -102,5 +96,6 @@ def set_subscription(message, bot: Leonard):
     bot.call_handler(message, 'subscriptions-show')
 
 
-def get_subscription_status(bot: Leonard, user_id, plugin, shortcut):
-    return bot.user_get(user_id, 'notifications:{}:{}'.format(plugin, shortcut))
+def get_subscription_status(bot: Leonard, user_id, shortcut):
+    plugin = [name for name, y in bot.available_subscriptions.items() for params in y.values() if shortcut == params[0]]
+    return bot.user_get(user_id, 'notifications:{}:{}'.format(plugin[0], shortcut))
