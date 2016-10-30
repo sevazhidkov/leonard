@@ -83,7 +83,7 @@ def search_results(message, bot):
         venue['reasons'] = [reason['summary'] for reason in item['reasons']['items']]
         venue['url'] = FOURSQUARE_LINK.format(item['venue']['id'])
 
-        print(item['venue']['location'])
+        bot.logger.info(item['venue']['location'])
 
         venue['location'] = {
             'lat': item['venue']['location']['lat'],

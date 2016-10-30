@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- ?
 import os
 import json
 
@@ -22,7 +23,7 @@ def send_news(message, bot):
     news = get_news(bot)
     bot.user_set(message.u_id, "news:cur_entry", 0)
     reply_message = NEWS_MESSAGE.render(entry=news[0])
-    reply_markup = build_result_keyboard()
+    reply_markup = build_result_keyboard(0, news[0]["url"])
     
     bot.telegram.send_message(message.u_id, reply_message, 
                               parse_mode = telegram.ParseMode.MARKDOWN,
@@ -61,17 +62,18 @@ def edit_current_entry(entry, query, cur_page, bot):
         message_id = query.message.message_id
     )
     bot.telegram.editMessageReplyMarkup(
-        reply_markup = build_result_keyboard(cur_page),
+        reply_markup = build_result_keyboard(cur_page, entry["url"]),
         chat_id = query.message.chat_id,
         message_id = query.message.message_id
     )
 
 
-def build_result_keyboard(cur_page=0):
+def build_result_keyboard(cur_page, article_url):
     back_button = telegram.InlineKeyboardButton("⏮ Back", callback_data="news_last_entry")
-    next_button = telegram.InlineKeyboardButton("Next ⏭", callback_data="news_next_entry")
+    next_button = telegram.InlineKeyboardButton("Next ⏭­", callback_data="news_next_entry")
+    url_button = telegram.InlineKeyboardButton("Open article 🌐", url=article_url)
     
-    keyboard = [[],[]]
+    keyboard = [[],[url_button]]
     if cur_page != 0:
         keyboard[0].append(back_button)
     if cur_page != 9:
