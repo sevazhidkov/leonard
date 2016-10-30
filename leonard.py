@@ -7,6 +7,7 @@ from redis import from_url
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
+from tzwhere import tzwhere
 
 logger = logging.getLogger('leonard')
 
@@ -33,10 +34,19 @@ class Leonard:
 
         self.logger = logger
 
+        self.subscriptions = []
+        self.available_subscriptions = {}
+
+        self.tz = tzwhere.tzwhere()
+
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
             if plugin_name.endswith('.py'):
                 plugin = importlib.import_module('modules.{}'.format(plugin_name.rstrip('.py')))
+                if hasattr(plugin, 'SUBSCRIBES'):
+                    self.available_subscriptions[
+                        plugin.NAME if hasattr(plugin, 'NAME') else plugin_name.rstrip('.py')
+                    ] = plugin.SUBSCRIBES
                 plugin.register(self)
 
     def send_message(self, *args, **kwargs):
@@ -70,8 +80,6 @@ class Leonard:
         try:
             self.handlers[current_handler](message, self)
         except Exception as error:
-            if self.debug:
-                raise error
             self.logger.error(error)
 
             self.user_set(message.u_id, 'handler', self.default_handler)
@@ -86,11 +94,13 @@ class Leonard:
         try:
             self.callback_handlers[handler_name](query, self)
         except Exception as error:
+            self.telegram.answerCallbackQuery(callback_query_id=query.id)
+
             if self.debug:
                 raise error
             self.logger.error(error)
 
-            self.user_set(message.u_id, 'handler', self.default_handler)
+            self.user_set(query.message.u_id, 'handler', self.default_handler)
 
             return
 
@@ -114,3 +124,12 @@ class Leonard:
         key = 'user:{}:{}'.format(user_id, field)
         self.redis.set(key, value)
         logger.info('redis set {} => {}'.format(key, value))
+
+    def user_delete(self, user_id, field):
+        key = 'user:{}:{}'.format(user_id, field)
+        self.redis.delete(key)
+        logger.info('redis delete {}'.format(key))
+
+
+def call_handler(bot, message, name):
+    bot.call_handler(message, name)
