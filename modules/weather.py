@@ -133,8 +133,8 @@ def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24
             continue
         user = json.loads(location)
         timezone = pytz.timezone(user['timezone'])
-        if condition(timezone) and ((
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0)
+        if condition(timezone) and (
+                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
         ) <= 0:
             result.append([int(u_id), arrow.now(timezone).datetime.hour])
             bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
