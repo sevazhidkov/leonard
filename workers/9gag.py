@@ -24,7 +24,7 @@ if __name__ == '__main__':
                     'title': title,
                     'img': img,
                     'createdAt': int(time.time()),
-                    'viewed': []
+                    'viewed': {-1}
                 }
             )
         time.sleep(10*60)

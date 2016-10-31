@@ -76,9 +76,9 @@ def get_meme(bot: Leonard, user_id):
         Key={
             'postId': meme['postId']
         },
-        UpdateExpression="set viewed = list_append(viewed, :user_id)",
+        UpdateExpression="ADD viewed :user_id",
         ExpressionAttributeValues={
-            ':user_id': [user_id]
+            ':user_id': {user_id}
         }
     )
     return meme['title'], meme['img'], meme['postId']
