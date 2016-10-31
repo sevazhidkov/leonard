@@ -10,12 +10,13 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from leonard import Leonard
 
 NAME = '9GAG'
+ORDER = 2
 
 SUBSCRIBES = collections.OrderedDict([
-    ('New memes every day 🌇', [
+    ('New memes every day 🤗', [
         'meme-day',
-        ('Well, now every morning I will send weather forecasts specially for you ☺️',
-         'No more daily memes, unfortunately.'),
+        ('Now next day will be more happier than previous! 😀',
+         'No more daily memes, unfortunately. 😓'),
         (10, 11, 12)
     ]),
 ])

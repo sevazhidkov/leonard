@@ -12,6 +12,7 @@ from leonard import Leonard
 from modules.location import set_location
 
 NAME = 'Weather'
+ORDER = 1
 
 WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n\n{{ day_summary }}")
