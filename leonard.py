@@ -2,6 +2,8 @@ import os
 import logging
 import importlib
 
+import boto3
+import collections
 from flask import Flask
 from redis import from_url
 
@@ -36,8 +38,10 @@ class Leonard:
 
         self.subscriptions = []
         self.available_subscriptions = {}
-
         self.tz = tzwhere.tzwhere()
+
+        self.dynamo = boto3.resource('dynamodb', 'eu-central-1')
+        self.nine_gag = self.dynamo.Table('9gag')
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
@@ -46,8 +50,9 @@ class Leonard:
                 if hasattr(plugin, 'SUBSCRIBES'):
                     self.available_subscriptions[
                         plugin.NAME if hasattr(plugin, 'NAME') else plugin_name.rstrip('.py')
-                    ] = plugin.SUBSCRIBES
+                    ] = (plugin.ORDER, plugin.SUBSCRIBES)
                 plugin.register(self)
+        self.available_subscriptions = collections.OrderedDict([(x, y[1]) for x, y in sorted(self.available_subscriptions.items(), key=lambda x: x[1][0])])
 
     def send_message(self, *args, **kwargs):
         if 'reply_markup' not in kwargs:

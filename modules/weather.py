@@ -12,6 +12,7 @@ from leonard import Leonard
 from modules.location import set_location
 
 NAME = 'Weather'
+ORDER = 1
 
 WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n\n{{ day_summary }}")
@@ -130,11 +131,12 @@ def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24
     for u_id in users:
         location = bot.user_get(u_id, 'location')
         if not location:
-            continue
-        user = json.loads(location)
-        timezone = pytz.timezone(user['timezone'])
-        if condition(timezone) and ((
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0)
+            timezone = pytz.timezone('UTC')
+        else:
+            user = json.loads(location)
+            timezone = pytz.timezone(user['timezone'])
+        if condition(timezone) and (
+                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
         ) <= 0:
             result.append([int(u_id), arrow.now(timezone).datetime.hour])
             bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
