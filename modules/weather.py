@@ -130,9 +130,10 @@ def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24
     for u_id in users:
         location = bot.user_get(u_id, 'location')
         if not location:
-            continue
-        user = json.loads(location)
-        timezone = pytz.timezone(user['timezone'])
+            timezone = pytz.timezone('UTC')
+        else:
+            user = json.loads(location)
+            timezone = pytz.timezone(user['timezone'])
         if condition(timezone) and (
                     bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
         ) <= 0:
