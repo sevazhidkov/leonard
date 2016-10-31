@@ -4,7 +4,7 @@ import telegram
 MENU = [[('handler', 'Places ☕ 🍝 🏨', 'foursquare-location-choice'),
          ('handler', 'Weather 🌤 ☔️ ⛄️', 'weather-show')],
         [('handler', 'Beautiful Vinci filters 🌇 🏙 🌃', 'vinci-upload-image'),
-        ('handler', 'News 📰', 'news_get_entry')]]
+        ('handler', 'News 📰', 'news-get-entry')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',

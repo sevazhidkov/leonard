@@ -1,6 +1,6 @@
+import os
 import json
 from mapbox import Geocoder
-import os
 
 WELCOME_LOCATION_SETUP = ("🌍 I have a lot amazing functions that depends on your location, " +
                           "like getting a Uber taxi 🚕 , weather forecasts 🌄 and so on.\n\n" +

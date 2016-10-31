@@ -14,10 +14,10 @@ NEWS_SOURCE = "google-news"
 NEWS_TTL = 9000
 
 def register(bot):
-    bot.handlers["news_get_entry"] = send_news
+    bot.handlers["news-get-entry"] = send_news
 
-    bot.callback_handlers["news_next_entry"] = next_entry
-    bot.callback_handlers["news_last_entry"] = last_entry
+    bot.callback_handlers["news-next-entry"] = next_entry
+    bot.callback_handlers["news-last-entry"] = last_entry
 
 def send_news(message, bot):
     news = get_news(bot)
@@ -25,7 +25,8 @@ def send_news(message, bot):
     reply_message = NEWS_MESSAGE.render(entry=news[0])
     reply_markup = build_result_keyboard(0, news[0]["url"])
     
-    bot.telegram.send_message(message.u_id, reply_message, 
+    bot.telegram.send_message(message.u_id, 
+                              reply_message, 
                               parse_mode = telegram.ParseMode.MARKDOWN,
                               reply_markup = reply_markup) 
 
@@ -47,8 +48,8 @@ def get_news(bot):
     if news is None:
         request = requests.get(NEWS_API_URL.render(source = NEWS_SOURCE, api_key = NEWS_API_TOKEN)).text
         news = json.loads(request)["articles"]
-        bot.redis.set("news:cache",json.dumps(news))
-        bot.redis.expire("news:cache",NEWS_TTL)
+        bot.redis.set("news:cache", json.dumps(news))
+        bot.redis.expire("news:cache", NEWS_TTL)
     else:
         news = json.loads(news.decode())    
 
@@ -69,11 +70,11 @@ def edit_current_entry(entry, query, cur_page, bot):
 
 
 def build_result_keyboard(cur_page, article_url):
-    back_button = telegram.InlineKeyboardButton("⏮ Back", callback_data="news_last_entry")
-    next_button = telegram.InlineKeyboardButton("Next ⏭­", callback_data="news_next_entry")
+    back_button = telegram.InlineKeyboardButton("⏮ Back", callback_data="news-last-entry")
+    next_button = telegram.InlineKeyboardButton("Next ⏭­", callback_data="news-next-entry")
     url_button = telegram.InlineKeyboardButton("Open article 🌐", url=article_url)
     
-    keyboard = [[],[url_button]]
+    keyboard = [[], [url_button]]
     if cur_page != 0:
         keyboard[0].append(back_button)
     if cur_page != 9:
