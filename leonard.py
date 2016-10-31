@@ -9,6 +9,8 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 from tzwhere import tzwhere
 
+from libs.analytics import track_message
+
 logger = logging.getLogger('leonard')
 
 
@@ -85,6 +87,8 @@ class Leonard:
             self.user_set(message.u_id, 'handler', self.default_handler)
 
             return
+
+        track_message(message)
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
