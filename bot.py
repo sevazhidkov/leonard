@@ -9,6 +9,7 @@ import telegram
 from telegram.error import NetworkError, Unauthorized
 
 from leonard import Leonard
+from libs import shrt
 
 WEBHOOK_HOSTNAME = os.environ.get('WEBHOOK_HOSTNAME', 'https://leonardbot.herokuapp.com')
 
@@ -32,6 +33,8 @@ def webhook(token):
     update = telegram.Update.de_json(request.get_json(force=True), bot.telegram)
     bot.process_update(update)
     return 'ok'
+
+shrt.get_link_route = bot.app.route('/l/<query>')(shrt.get_link_route)
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':
     bot.telegram.setWebhook('')

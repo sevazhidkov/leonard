@@ -125,9 +125,9 @@ class Leonard:
         logger.info('redis get {} => {}'.format(key, value))
         return value
 
-    def user_set(self, user_id, field, value):
+    def user_set(self, user_id, field, value, **kwargs):
         key = 'user:{}:{}'.format(user_id, field)
-        self.redis.set(key, value)
+        self.redis.set(key, value, **kwargs)
         logger.info('redis set {} => {}'.format(key, value))
 
     def user_delete(self, user_id, field):
