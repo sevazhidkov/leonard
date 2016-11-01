@@ -6,7 +6,7 @@ from time import sleep
 from flask import request
 
 import telegram
-from telegram.error import NetworkError, Unauthorized
+from telegram.error import NetworkError, Unauthorized, RetryAfter
 
 from leonard import Leonard
 from libs import shrt
@@ -66,7 +66,7 @@ print('Setting webhook')
 webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
 try:
     bot.telegram.setWebhook(webhook_url)
-except NetworkError:
+except (NetworkError, RetryAfter):
     sleep(1)
     bot.telegram.setWebhook(webhook_url)
 
