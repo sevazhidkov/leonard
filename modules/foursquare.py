@@ -52,9 +52,10 @@ def query_choice(message, bot):
         set_location(bot, message.u_id, message.location)
 
     bot.user_set(message.u_id, 'foursquare:location', bot.user_get(message.u_id, 'location'))
-    keyboard = telegram.ReplyKeyboardMarkup([['Coffee ☕'],
-                                             ['Pizza 🍕'],
-                                             ['Shop 🛍']])
+    keyboard = telegram.ReplyKeyboardMarkup([['Coffee ☕', 'Restaurant 🍴'],
+                                             ['Pizza 🍕', 'Club 🎤'],
+                                             ['Shop 🛍', 'Chinese 🍝'],
+                                             [bot.MENU_BUTTON]])
     bot.telegram.send_message(message.u_id, SEND_YOUR_QUERY, reply_markup=keyboard)
 
 
