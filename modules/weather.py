@@ -9,6 +9,8 @@ import pytz
 import time
 
 from leonard import Leonard
+
+from libs.analytics import Tracker
 from modules.location import set_location
 
 NAME = 'Weather'
@@ -151,6 +153,7 @@ def show_weather(message, bot, u_id=None, subscription=False):
         user_id = message.u_id
     else:
         user_id = u_id
+    tracker = Tracker('weather', u_id=user_id)
     if not subscription:
         bot.user_set(user_id, 'next_handler', 'weather-change')
         bot.telegram.send_message(user_id, "Hold on, I'm loading weather information provided by Forecast.io ⌛",
@@ -161,6 +164,14 @@ def show_weather(message, bot, u_id=None, subscription=False):
         reply_markup = None
     bot.telegram.send_message(user_id, text,
                               reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
+
+    if subscription:
+        tracker.event('weather-subscription')
+    else:
+        tracker.event('weather-summary')
+    print(tracker)
+
+    return tracker
 
 
 def change_weather(message, bot):
@@ -176,7 +187,6 @@ def change_weather(message, bot):
 
 def build_basic_forecast(location, user_id, bot):
     weather_data = get_weather(location['lat'], location['long'])
-    bot.logger.info('Weather information: {}'.format(weather_data))
     bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
     reply_markup = telegram.ReplyKeyboardMarkup(
         [[telegram.KeyboardButton(HOUR_FORECAST_BUTTON),
