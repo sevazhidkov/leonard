@@ -77,6 +77,8 @@ def track_message(message, handler, tracker=None):
 def prepare_to_dynamo(item):
     dynamo_item = {}
     for (key, value) in item.items():
+        if value == '':
+            continue
         if type(value) == str:
             dynamo_item[key] = {'S': value}
         elif type(value) in [int, float]:
