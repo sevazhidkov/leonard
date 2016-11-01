@@ -1,6 +1,8 @@
 import json
 from mapbox import Geocoder
 
+from libs.utils import get_timezone
+
 WELCOME_LOCATION_SETUP = ("🌍 I have a lot amazing functions that depends on your location, " +
                           "like getting a Uber taxi 🚕 , weather forecasts 🌄 and so on.\n\n" +
                           "I want to know your current location 🌐, you can always change it later. " +
@@ -34,7 +36,7 @@ def geocode(location_name, bot=None):
         'full_name': place.get('place_name'),
         'name': place.get('text'),
         'country': country,
-        'timezone': bot.tz.tzNameAt(place['center'][1], place['center'][0])
+        'timezone': git_timezone(place['center'][1], place['center'][0])
     }
 
 
@@ -53,7 +55,7 @@ def reverse_geocode(lat, long, bot=None):
         'full_name': place.get('place_name'),
         'name': place.get('text'),
         'country': country,
-        'timezone': bot.tz.tzNameAt(place['center'][1], place['center'][0])
+        'timezone': get_timezone(place['center'][1], place['center'][0])
     }
 
 

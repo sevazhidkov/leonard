@@ -9,7 +9,6 @@ from redis import from_url
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
-from tzwhere import tzwhere
 
 from libs.analytics import track_message
 
@@ -40,7 +39,6 @@ class Leonard:
 
         self.subscriptions = []
         self.available_subscriptions = {}
-        self.tz = tzwhere.tzwhere()
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
