@@ -10,7 +10,7 @@ from libs.utils import build_bot, FakeMessage
 
 from modules.location import set_location
 
-OAUTH_START_INVITE_FIRST = "Oh, it looks like you didn't connected your Uber account 🤔"
+OAUTH_START_INVITE_FIRST = "Oh, it looks like you didn't connect your Uber account 🤔"
 OAUTH_START_INVITE_SECOND = ("Don't worry, it's easy and you should do it only once.\n"
                              "Just click button below and go through Uber authorization ✅")
 CHOOSE_CURRENT_LOCATION = "OK, please tell me your location – start point for your route 🗺"
