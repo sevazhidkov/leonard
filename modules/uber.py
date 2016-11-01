@@ -20,7 +20,7 @@ CHOOSE_PRODUCT = jinja2.Template("Cool 👌 Everything is ready to get a Uber - 
                                  "{% for product in products %}*{{ product.display_name }}* – "
                                  "{{ product.description }}\n{% endfor %}")
 ORDERING_CAR = "Good choice! Wait a second, I'm ordering car for you 🕐"
-ORDER_ERROR = "Unfortunally I can't process this order 😒\n\nMy developer notified, please try again later 🕘"
+ORDER_ERROR = "Unfortunally I can't process this order 😒\n\nUber isn't avaliable here right now, please try again later 🕘"
 ORDER_CARD = jinja2.Template("*Uber order 🚘*\n\n"
                              "_Your order has been sent to Uber. I will send you "
                              "all updates._")
@@ -158,6 +158,10 @@ def choose_product(message, bot):
         'longitude': user_location['long'],
     }).json()
 
+    if not products['products']:
+        bot.telegram.send_message(message.u_id, ORDER_ERROR, reply_markup=bot.get_menu(message))
+        return
+
     product_ids = {}
     keyboard = [[bot.MENU_BUTTON]]
     products_per_row = 3
@@ -172,7 +176,8 @@ def choose_product(message, bot):
         keyboard.append(current_row)
 
     bot.telegram.send_message(message.u_id, CHOOSE_PRODUCT.render(products=products['products']),
-                              parse_mode=telegram.ParseMode.MARKDOWN, reply_markup=telegram.ReplyKeyboardMarkup(keyboard))
+                              parse_mode=telegram.ParseMode.MARKDOWN, reply_markup=telegram.ReplyKeyboardMarkup(keyboard),
+                              resize_keyboard=True)
     bot.user_set(message.u_id, 'uber:avaliable_products', json.dumps(product_ids))
 
 

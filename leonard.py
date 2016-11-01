@@ -7,9 +7,11 @@ import collections
 from flask import Flask
 from redis import from_url
 
+
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 
+from modules.menu import get_keyboard
 from libs.analytics import track_message
 
 logger = logging.getLogger('leonard')
@@ -115,11 +117,16 @@ class Leonard:
         if tracker:
             tracker.send()
 
-    def call_handler(self, message, name):
+    def call_handler(self, message, name, **kwargs):
         self.user_set(message.u_id, 'handler', name)
         self.user_set(message.u_id, 'next_handler', '')
         message.moved = True
-        return self.handlers[name](message, self)
+        return self.handlers[name](message, self, **kwargs)
+
+    def get_menu(self, message):
+        self.user_set(message.u_id, 'handler', 'main-menu')
+        self.user_set(message.u_id, 'next_handler', '')
+        return ReplyKeyboardMarkup(get_keyboard(), resize_keyboard=True)
 
     def user_get(self, user_id, field, default=None):
         key = 'user:{}:{}'.format(user_id, field)

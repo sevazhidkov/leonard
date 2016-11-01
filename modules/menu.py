@@ -31,14 +31,7 @@ def main_menu(message, bot):
                 if row[0] == 'handler' and row[1] == message.text:
                     return bot.call_handler(message, row[2])
 
-    keyboard = []
-    for line in MENU:
-        subkeyboard = []
-        for row in line:
-            if row[0] == 'handler':
-                subkeyboard.append(row[1])
-        if subkeyboard:
-            keyboard.append(subkeyboard)
+    keyboard = get_keyboard()
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     bot.telegram.send_message(message.u_id, random.choice(GREETING_PHRASES),
                               reply_markup=reply_markup)
@@ -47,3 +40,15 @@ def main_menu(message, bot):
 def main_menu_callback(query, bot):
     query.message.moved = True
     bot.call_handler(query.message, 'main-menu')
+
+
+def get_keyboard():
+    keyboard = []
+    for line in MENU:
+        subkeyboard = []
+        for row in line:
+            if row[0] == 'handler':
+                subkeyboard.append(row[1])
+        if subkeyboard:
+            keyboard.append(subkeyboard)
+    return keyboard
