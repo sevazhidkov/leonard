@@ -171,7 +171,6 @@ def show_weather(message, bot, u_id=None, subscription=False):
         tracker.event('weather-subscription')
     else:
         tracker.event('weather-summary')
-    print(tracker)
 
     return tracker
 
