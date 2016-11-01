@@ -17,14 +17,20 @@ debug = False
 if 'BOT_DEBUG' in os.environ and os.environ['BOT_DEBUG'] == '1':
     debug = True
 
+print('Starting bot')
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('leonard')
 logger.setLevel(logging.INFO)
 
+print('Creating bot')
 telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
 bot = Leonard(telegram_client, debug)
+
+print('Collecting plugins')
 bot.collect_plugins()
 
+print('Setting routes')
 
 @bot.app.route('/webhook/<token>', methods=['POST'])
 def webhook(token):
@@ -53,6 +59,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'polling':
         except Unauthorized:
             update_id += 1
     exit()
+
+print('Setting webhook')
 
 # Register webhook
 webhook_url = WEBHOOK_HOSTNAME + '/webhook/' + os.environ['BOT_TOKEN']
