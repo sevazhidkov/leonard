@@ -1,9 +1,9 @@
 import random
 import telegram
 
-MENU = [[('handler', 'Places ☕ 🍝 🏨', 'foursquare-location-choice'),
-         ('handler', 'Weather 🌤 ☔️ ⛄️', 'weather-show')],
-        [('handler', 'Vinci filters 🌇 🏙 🌃', 'vinci-upload-image'),
+MENU = [[('handler', 'Places ☕', 'foursquare-location-choice'),
+         ('handler', 'Weather 🌤', 'weather-show')],
+        [('handler', 'Vinci filters 🌇', 'vinci-upload-image'),
          ('handler', 'Get Uber 🚘', 'uber-choose-location')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
          ('handler', '9GAG 😅', 'meme-show')]]

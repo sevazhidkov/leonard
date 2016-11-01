@@ -158,8 +158,6 @@ def show_weather(message, bot, u_id=None, subscription=False):
     tracker = Tracker('weather', u_id=user_id)
     if not subscription:
         bot.user_set(user_id, 'next_handler', 'weather-change')
-        bot.telegram.send_message(user_id, "Hold on, I'm loading weather information provided by Forecast.io ⌛",
-                                  reply_markup=telegram.ReplyKeyboardHide(), disable_web_page_preview=True)
     location = json.loads(bot.user_get(user_id, 'location'))
     text, reply_markup = build_basic_forecast(location, user_id, bot)
     if subscription:
