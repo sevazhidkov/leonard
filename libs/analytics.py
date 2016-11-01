@@ -60,14 +60,14 @@ class Tracker:
 def track_message(message, handler, tracker=None):
     dynamodb.put_item(
         TableName='LeonardBotUserMessage',
-        Item={
-            'id': {'N': str(message.message_id)},
-            'time': {'N': str(time.mktime(message.date.timetuple()))},
-            'proceed_time': {'N': str(time.time())},
-            'text': {'S': message.text},
-            'user_id': {'N': str(message.from_user.id)},
-            'handler': {'S': handler or 'registration'}
-        }
+        Item=prepare_to_dynamo({
+            'id': message.message_id,
+            'time': time.mktime(message.date.timetuple()),
+            'proceed_time': time.time(),
+            'text': message.text,
+            'user_id: message.from_user.id,
+            'handler': handler
+        })
     )
 
     if tracker:
