@@ -29,8 +29,7 @@ def main_menu(message, bot):
         for line in MENU:
             for row in line:
                 if row[0] == 'handler' and row[1] == message.text:
-                    bot.call_handler(message, row[2])
-                    return
+                    return bot.call_handler(message, row[2])
 
     keyboard = []
     for line in MENU:

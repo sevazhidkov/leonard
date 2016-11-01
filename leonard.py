@@ -11,6 +11,8 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 from tzwhere import tzwhere
 
+from libs.analytics import track_message
+
 logger = logging.getLogger('leonard')
 
 
@@ -73,17 +75,19 @@ class Leonard:
         message.u_id = message.from_user.id
         message.moved = False
 
+        current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
+
         # Go back to menu haves the largest priority
         if message.text == self.MENU_BUTTON:
-            self.call_handler(message, self.default_handler)
+            tracker = self.call_handler(message, self.default_handler)
+            track_message(message, current_handler, tracker)
             return
 
-        current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
         self.user_set(message.u_id, 'handler', current_handler)
         self.user_set(message.u_id, 'next_handler', '')
 
         try:
-            self.handlers[current_handler](message, self)
+            tracker = self.handlers[current_handler](message, self)
         except Exception as error:
             self.logger.error(error)
 
@@ -91,13 +95,15 @@ class Leonard:
 
             return
 
+        track_message(message, current_handler, tracker)
+
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
         query.message.u_id = query.from_user.id
 
         handler_name = query.data
         try:
-            self.callback_handlers[handler_name](query, self)
+            tracker = self.callback_handlers[handler_name](query, self)
         except Exception as error:
             self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
@@ -111,11 +117,14 @@ class Leonard:
 
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
+        if tracker:
+            tracker.send()
+
     def call_handler(self, message, name):
         self.user_set(message.u_id, 'handler', name)
         self.user_set(message.u_id, 'next_handler', '')
         message.moved = True
-        self.handlers[name](message, self)
+        return self.handlers[name](message, self)
 
     def user_get(self, user_id, field, default=None):
         key = 'user:{}:{}'.format(user_id, field)
