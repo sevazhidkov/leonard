@@ -65,7 +65,7 @@ def track_message(message, handler, tracker=None):
             'time': time.mktime(message.date.timetuple()),
             'proceed_time': time.time(),
             'text': message.text,
-            'user_id: message.from_user.id,
+            'user_id': message.from_user.id,
             'handler': handler
         })
     )
