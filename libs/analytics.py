@@ -1,7 +1,7 @@
 import time
 import boto3
 
-dynamodb = boto3.client('dynamodb', 'eu-central-1')
+dynamodb = boto3.client('dynamodb', 'eu-west-1')
 
 
 class Tracker:

@@ -42,9 +42,6 @@ class Leonard:
         self.available_subscriptions = {}
         self.tz = tzwhere.tzwhere()
 
-        self.dynamo = boto3.resource('dynamodb', 'eu-central-1')
-        self.nine_gag = self.dynamo.Table('9gag')
-
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
             if plugin_name.endswith('.py'):

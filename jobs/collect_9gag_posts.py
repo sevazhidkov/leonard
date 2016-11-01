@@ -9,7 +9,7 @@ NINEGAG_RSS_URL = 'http://www.15minutesoffame.be/9gag/rss/9GAG_-_Trending.atom'
 
 if __name__ == '__main__':
     feed = feedparser.parse(NINEGAG_RSS_URL)['items']
-    table = boto3.resource('dynamodb', 'eu-central-1').Table('9gag')
+    table = boto3.resource('dynamodb', 'eu-west-1').Table('LeonardBot9gagPosts')
     for item in feed:
         title, post_id, img = item['title'], item['link'].split('/')[4], BeautifulSoup(
             item['summary'], 'lxml'

@@ -4,6 +4,7 @@ from random import choice
 
 import arrow
 import pytz
+import boto3
 from boto3.dynamodb.conditions import Attr
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -21,8 +22,12 @@ SUBSCRIBES = collections.OrderedDict([
     ]),
 ])
 
+dynamo = boto3.resource('dynamodb', 'eu-west-1')
+
 
 def register(bot):
+    bot.nine_gag = dynamo.Table('LeonardBot9gagPosts')
+
     bot.handlers['meme-show'] = show_meme
 
     bot.subscriptions.append((
