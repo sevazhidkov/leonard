@@ -36,7 +36,7 @@ def geocode(location_name, bot=None):
         'full_name': place.get('place_name'),
         'name': place.get('text'),
         'country': country,
-        'timezone': git_timezone(place['center'][1], place['center'][0])
+        'timezone': get_timezone(place['center'][1], place['center'][0])
     }
 
 
