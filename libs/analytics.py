@@ -66,7 +66,7 @@ def track_message(message, handler, tracker=None):
             'proceed_time': {'N': str(time.time())},
             'text': {'S': message.text},
             'user_id': {'N': str(message.from_user.id)},
-            'handler': {'S': handler}
+            'handler': {'S': handler or 'registration'}
         }
     )
 
