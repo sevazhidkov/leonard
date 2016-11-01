@@ -2,7 +2,8 @@ import random
 import telegram
 
 MENU = [[('handler', 'Places ☕', 'foursquare-location-choice'),
-         ('handler', 'Weather 🌤', 'weather-show')],
+         ('handler', 'Weather 🌤', 'weather-show'),
+         ('handler', 'News 📰', 'news-get-entry')],
         [('handler', 'Vinci filters 🌇', 'vinci-upload-image'),
          ('handler', 'Get Uber 🚘', 'uber-choose-location')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
