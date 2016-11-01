@@ -39,7 +39,7 @@ def main_menu(message, bot):
                 subkeyboard.append(row[1])
         if subkeyboard:
             keyboard.append(subkeyboard)
-    reply_markup = telegram.ReplyKeyboardMarkup(keyboard)
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     bot.telegram.send_message(message.u_id, random.choice(GREETING_PHRASES),
                               reply_markup=reply_markup)
 

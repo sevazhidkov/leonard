@@ -55,7 +55,7 @@ class Leonard:
 
     def send_message(self, *args, **kwargs):
         if 'reply_markup' not in kwargs:
-            kwargs['reply_markup'] = ReplyKeyboardMarkup([[self.MENU_BUTTON]])
+            kwargs['reply_markup'] = ReplyKeyboardMarkup([[self.MENU_BUTTON]], resize_keyboard=True)
 
         return self.telegram.send_message(*args, **kwargs)
 
