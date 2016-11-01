@@ -40,7 +40,7 @@ class Leonard:
 
         self.subscriptions = []
         self.available_subscriptions = {}
-        # self.tz = tzwhere.tzwhere()
+        self.tz = tzwhere.tzwhere()
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):

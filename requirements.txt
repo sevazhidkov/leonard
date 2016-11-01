@@ -12,6 +12,8 @@ foursquare
 
 pytz
 tzwhere
+shapely
+numpy
 
 feedparser
 boto3
