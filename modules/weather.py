@@ -52,7 +52,7 @@ SUBSCRIBES = collections.OrderedDict([
     ('Weather forecast every morning 🌇', [
         'morning-forecast',
         ('Well, now every morning I will send weather forecasts specially for you ☺️', 'No more morning forecasts, honey.'),
-        (8, 9, 10)
+        (8, 9, 10, 11)
     ]),
     ('Tomorrow forecast every evening 🌃', [
         'evening-forecast',
@@ -220,7 +220,7 @@ def send_show_forecast_evening(bot, args):
                 'summary': hour_weather['summary'],
                 'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
             })
-        text = FORECAST_MESSAGE.render(name=args[1], hours=hours)
+        text = FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours)
         tomorrow = weather_data['daily']['data'][1]
         text += '\n\n' + SUMMARY_MESSAGE.render(
             name='tomorrow',
@@ -252,7 +252,7 @@ def send_show_forecast(bot, args):
                 'summary': hour_weather['summary'],
                 'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
             })
-        bot.telegram.send_message(u_id, FORECAST_MESSAGE.render(name=args[1], hours=hours),
+        bot.telegram.send_message(u_id, FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours),
                                   parse_mode=telegram.ParseMode.MARKDOWN)
 
 

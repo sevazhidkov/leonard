@@ -37,9 +37,9 @@ def subscriptions_setup(message, bot: Leonard):
 def subscriptions_setup_result(message, bot: Leonard):
     base_key = 'notifications:{}:{}'.format(weather.NAME, '{}')
     if '🌄' in message.text:
-        key = base_key.format('morning')
+        key = base_key.format('morning-forecast')
     elif '☔️' in message.text:
-        key = base_key.format('rain')
+        key = base_key.format('rain-forecast')
     else:
         key = None
     bot.telegram.send_message(
