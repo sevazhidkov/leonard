@@ -91,6 +91,8 @@ def build_result_keyboard(cur_page, article_url):
 
 
 def espace_markdown_symbols(text):
+    if not text:
+        return ''
     for i in ['*', '_', '[', ']', '|']:
         text = text.replace(i, '\\' + i)
     return text
