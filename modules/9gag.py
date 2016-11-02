@@ -16,7 +16,7 @@ ORDER = 2
 SUBSCRIBES = collections.OrderedDict([
     ('New memes every day 🤗', [
         'meme-day',
-        ('Now next day will be more happier than previous! 😀',
+        ('Now next day will be happier than previous! 😀',
          'No more daily memes, unfortunately. 😓'),
         (10, 11, 12)
     ]),
