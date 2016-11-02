@@ -11,7 +11,7 @@ NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n\n{{entry.description}}\n\n{{
 NEWS_API_URL = jinja2.Template("https://newsapi.org/v1/articles?source={{source}}&apiKey={{api_key}}")
 NEWS_API_TOKEN = os.environ['NEWSAPI_TOKEN']
 NEWS_SOURCE = "google-news"
-NEWS_TTL = 9000
+NEWS_TTL = 1800
 
 
 def register(bot):
@@ -49,6 +49,12 @@ def get_news(bot):
     if news is None:
         request = requests.get(NEWS_API_URL.render(source = NEWS_SOURCE, api_key = NEWS_API_TOKEN)).text
         news = json.loads(request)["articles"]
+
+        for article in news:
+            article['title'] = espace_markdown_symbols(article['title'])
+            article['description'] = espace_markdown_symbols(article['description'])
+            article['url'] = espace_markdown_symbols(article['url'])
+
         bot.redis.set("news:cache", json.dumps(news))
         bot.redis.expire("news:cache", NEWS_TTL)
     else:
@@ -82,3 +88,9 @@ def build_result_keyboard(cur_page, article_url):
         keyboard[0].append(next_button)
 
     return telegram.InlineKeyboardMarkup(keyboard)
+
+
+def espace_markdown_symbols(text):
+    for i in ['*', '_', '[', ']', '|']:
+        text = text.replace(i, '\\' + i)
+    return text
