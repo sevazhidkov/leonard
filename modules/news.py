@@ -28,8 +28,9 @@ def send_news(message, bot):
 
     bot.telegram.send_message(message.u_id,
                               reply_message,
-                              parse_mode = telegram.ParseMode.MARKDOWN,
-                              reply_markup = reply_markup)
+                              parse_mode=telegram.ParseMode.MARKDOWN,
+                              reply_markup=reply_markup,
+                              disable_web_page_preview=True)
 
 def next_entry(query, bot):
     news = get_news(bot)
