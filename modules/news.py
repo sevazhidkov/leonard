@@ -65,15 +65,17 @@ def get_news(bot):
 
 def edit_current_entry(entry, query, cur_page, bot):
     bot.telegram.editMessageText(
-        text = NEWS_MESSAGE.render(entry=entry),
-        parse_mode = telegram.ParseMode.MARKDOWN,
-        chat_id = query.message.chat_id,
-        message_id = query.message.message_id
+        text=NEWS_MESSAGE.render(entry=entry),
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
     )
     bot.telegram.editMessageReplyMarkup(
-        reply_markup = build_result_keyboard(cur_page, entry["url"]),
-        chat_id = query.message.chat_id,
-        message_id = query.message.message_id
+        reply_markup=build_result_keyboard(cur_page, entry["url"]),
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
     )
 
 
