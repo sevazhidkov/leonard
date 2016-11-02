@@ -7,6 +7,8 @@ import jinja2
 import redis
 import telegram
 
+from libs.googleapis import shorten_url
+
 NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n\n{{entry.description}}\n\n{{entry.url}}")
 NEWS_API_URL = jinja2.Template("https://newsapi.org/v1/articles?source={{source}}&apiKey={{api_key}}")
 NEWS_API_TOKEN = os.environ['NEWSAPI_TOKEN']
@@ -54,7 +56,7 @@ def get_news(bot):
         for article in news:
             article['title'] = espace_markdown_symbols(article['title'])
             article['description'] = espace_markdown_symbols(article['description'])
-            article['url'] = espace_markdown_symbols(article['url'])
+            article['url'] = espace_markdown_symbols(shorten_url(article['url']))
 
         bot.redis.set("news:cache", json.dumps(news))
         bot.redis.expire("news:cache", NEWS_TTL)
