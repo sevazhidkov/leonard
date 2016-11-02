@@ -84,7 +84,7 @@ def get_meme(bot: Leonard, user_id):
         },
         UpdateExpression="ADD viewed :user_id",
         ExpressionAttributeValues={
-            ':user_id': {user_id}
+            ':user_id': {int(user_id)}
         }
     )
     return meme['title'], meme['img'], meme['postId']
