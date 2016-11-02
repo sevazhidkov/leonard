@@ -60,7 +60,7 @@ def query_choice(message, bot):
 
 
 def search_results(message, bot):
-    bot.telegram.send_message(message.u_id, WAIT_A_SECOND, reply_markup=bot.get_menu())
+    bot.telegram.send_message(message.u_id, WAIT_A_SECOND, reply_markup=bot.get_menu(message))
     query = message.text
     location = json.loads(bot.user_get(message.u_id, 'location'))
     response = client.venues.explore(
