@@ -16,7 +16,7 @@ ORDER = 2
 SUBSCRIBES = collections.OrderedDict([
     ('New memes every day 🤗', [
         'meme-day',
-        ('Now next day will be more happier than previous! 😀',
+        ('Now next day will be happier than previous! 😀',
          'No more daily memes, unfortunately. 😓'),
         (10, 11, 12)
     ]),
@@ -73,18 +73,19 @@ def show_meme(message, bot: Leonard, user_id=None):
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
     )
 
+    bot.nine_gag.update_item(
+        Key={
+            'postId': post_id
+        },
+        UpdateExpression="ADD viewed :user_id",
+        ExpressionAttributeValues={
+            ':user_id': {int(user_id)}
+        }
+    )
+
 
 def get_meme(bot: Leonard, user_id):
     meme = choice(bot.nine_gag.scan(
         FilterExpression=~Attr('viewed').contains(user_id)
     )['Items'])
-    bot.nine_gag.update_item(
-        Key={
-            'postId': meme['postId']
-        },
-        UpdateExpression="ADD viewed :user_id",
-        ExpressionAttributeValues={
-            ':user_id': {user_id}
-        }
-    )
     return meme['title'], meme['img'], meme['postId']
