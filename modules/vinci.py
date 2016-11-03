@@ -1,3 +1,5 @@
+
+import time
 import requests
 import telegram
 
@@ -47,18 +49,31 @@ def results_view(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'vinci-results-iteration')
     bot.telegram.send_message(message.u_id, WAIT_A_SECOND)
     bot.telegram.sendChatAction(message.u_id, 'upload_photo')
-    file_id = message.photo[-1].file_id
+    optimal_photo = None
+    for photo_size in message.photo:
+        if not (photo_size.width > 200 and photo_size.height > 200):
+            continue
+        if not optimal_photo:
+            optimal_photo = photo_size
+        if optimal_photo.file_size < 42000:
+            optimal_photo = photo_size
+    if not optimal_photo:
+        bot.call_handler(message, 'vinci-upload-image')
+        return
+    file_id = optimal_photo.file_id
     photo = bot.telegram.getFile(file_id)
     bot.logger.info('Photo for Vinci url: {}'.format(photo.file_path))
     content = requests.get(photo.file_path).content
     response = requests.post(VINCI_PRELOAD, files={
         'file': ('photo.jpg', content)
     }).json()
+    time.sleep(1)
     bot.user_set(message.u_id, 'vinci:photo_id', response['preload'])
     bot.logger.info('Vinci photo id: {}'.format(response['preload']))
     bot.user_set(message.u_id, 'vinci:current_filter', 0)
     bot.telegram.send_photo(message.u_id, photo=VINCI_PROCESS.format(
-        response['preload'], filters[0]['id']
+        response['preload'], filters[0]['id'],
+        reply_markup=build_results_keyboard(0, message, bot)
     ))
     bot.telegram.send_message(message.u_id, filters[0]['name'] + ' ' + filters[0]['emoji'],
                               reply_markup=build_results_keyboard(0, message, bot))
