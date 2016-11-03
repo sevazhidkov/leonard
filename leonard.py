@@ -4,7 +4,7 @@ import importlib
 
 import boto3
 import collections
-from flask import Flask
+import falcon
 from redis import from_url
 
 
@@ -27,7 +27,7 @@ class Leonard:
         self.telegram = telegram_client
 
         # Flask web app
-        self.app = Flask(__name__)
+        self.app = falcon.API()
 
         # Dict str -> function with all handlers for messages
         # and other updates

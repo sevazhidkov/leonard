@@ -3,7 +3,7 @@ import json
 import jinja2
 import requests
 import telegram
-from flask import request, redirect
+import falcon
 
 from libs.shrt import short_user_link
 from libs.utils import build_bot, FakeMessage
@@ -49,6 +49,35 @@ CURRENT_ORDER_URL = "https://sandbox-api.uber.com/v1/requests/current"
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
 
+class UberRedirectResource:
+    def on_get(self, req, resp):
+        code = request.params.get('code')
+        access_data = requests.post(TOKEN_URL, data={
+            'client_secret': CLIENT_SECRET,
+            'client_id': CLIENT_ID,
+            'grant_type': 'authorization_code',
+            'redirect_uri': REDIRECT_URL,
+            'code': code
+        }).json()
+
+        bot = build_bot()
+        u_id = int(bot.redis.get('core:shrt:hash:{}'.format(req.cookies['user'])))
+        bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
+        bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
+        bot.user_set(u_id, 'uber:authorized', '1')
+        for place_id in ['home', 'work']:
+            response = requests.get(PLACES_URL.format(place_id), headers={
+                'Authorization': 'Bearer {}'.format(access_data['access_token'])
+            }).json()
+            if 'address' in response:
+                bot.user_set(u_id, 'uber:places:{}'.format(place_id), '1', ex=60 * 60 * 24 * 14)
+
+        fake_message = FakeMessage()
+        fake_message.u_id = u_id
+        bot.call_handler(fake_message, 'uber-choose-location')
+
+        raise falcon.HTTPMovedPermanently('https://telegram.me/leonardbot')
+
 
 def register(bot):
     global oauth_redirect
@@ -60,7 +89,7 @@ def register(bot):
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
 
-    oauth_redirect = bot.app.route('/uber/redirect')(oauth_redirect)
+    oauth_redirect = bot.app.add_route('/uber/redirect', UberRedirectResource())
 
 
 def choose_current_location(message, bot):
@@ -222,35 +251,6 @@ def oauth_start(message, bot):
     ])
     bot.send_message(message.u_id, OAUTH_START_INVITE_FIRST, reply_markup=telegram.ReplyKeyboardHide())
     bot.send_message(message.u_id, OAUTH_START_INVITE_SECOND, reply_markup=keyboard)
-
-
-def oauth_redirect():
-    code = request.args.get('code')
-    access_data = requests.post(TOKEN_URL, data={
-        'client_secret': CLIENT_SECRET,
-        'client_id': CLIENT_ID,
-        'grant_type': 'authorization_code',
-        'redirect_uri': REDIRECT_URL,
-        'code': code
-    }).json()
-
-    bot = build_bot()
-    u_id = int(bot.redis.get('core:shrt:hash:{}'.format(request.cookies['user'])))
-    bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
-    bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
-    bot.user_set(u_id, 'uber:authorized', '1')
-    for place_id in ['home', 'work']:
-        response = requests.get(PLACES_URL.format(place_id), headers={
-            'Authorization': 'Bearer {}'.format(access_data['access_token'])
-        }).json()
-        if 'address' in response:
-            bot.user_set(u_id, 'uber:places:{}'.format(place_id), '1', ex=60 * 60 * 24 * 14)
-
-    fake_message = FakeMessage()
-    fake_message.u_id = u_id
-    bot.call_handler(fake_message, 'uber-choose-location')
-
-    return redirect('https://telegram.me/leonardbot')
 
 
 def refresh_token(bot, u_id):

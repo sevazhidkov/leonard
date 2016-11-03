@@ -2,8 +2,8 @@ import os
 import string
 import random
 import hashlib
+import falcon
 import redis
-from flask import make_response, redirect, request
 
 ALPHABET = string.ascii_letters + string.digits
 SHORT_LINK_FORMAT = "{}/l/".format(os.environ['WEBHOOK_HOSTNAME'])
@@ -11,17 +11,17 @@ SHORT_LINK_FORMAT = "{}/l/".format(os.environ['WEBHOOK_HOSTNAME'])
 redis_client = redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
 
 
-def get_link_route(query):
-    base_key = 'core:shrt:link:{}:'.format(query)
-    full_link = redis_client.get(base_key + 'url')
-    if full_link is None:
-        return redirect('http://sheldon.ai/')
-    redis_client.incr(base_key + 'visits')
-    response = make_response(redirect(full_link))
-    user_hash = redis_client.get(base_key + 'user')
-    if user_hash:
-        response.set_cookie('user', user_hash)
-    return response
+class GetLinkResource:
+    def on_get(self, req, resp, query):
+        base_key = 'core:shrt:link:{}:'.format(query)
+        full_link = redis_client.get(base_key + 'url')
+        if full_link is None:
+            raise falcon.HTTPMovedPermanently('http://sheldon.ai/')
+        redis_client.incr(base_key + 'visits')
+        user_hash = redis_client.get(base_key + 'user')
+        if user_hash:
+            resp.set_cookie('user', user_hash.decode('utf-8'))
+        raise falcon.HTTPMovedPermanently(full_link.decode('utf-8'))
 
 
 def short_user_link(u_id, link, code_size=11):
