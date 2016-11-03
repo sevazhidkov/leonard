@@ -4,7 +4,7 @@ import requests
 import telegram
 
 SEND_PHOTO = 'Send your photo 📷 and I will add beautiful filters to it\n⛲️ 🌃 🌄'
-WAIT_A_SECOND = 'Wait a second, please 🕐'
+WAIT_A_SECOND = 'Wait a second, neural networks are thinking 🕐'
 FILTERS_EMOJI = {
     'Sunny': '🌤',
     'Msqrd': '🎭',
