@@ -15,3 +15,4 @@ pytz
 feedparser
 boto3
 beautifulsoup4
+lxml
