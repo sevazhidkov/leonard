@@ -5,7 +5,7 @@ from random import choice
 import arrow
 import pytz
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, AttributeNotExists
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from leonard import Leonard
@@ -66,7 +66,7 @@ def show_meme(message, bot: Leonard, user_id=None):
     if message:
         user_id = message.u_id
     title, img, post_id = get_meme(bot, user_id)
-    bot.telegram.send_photo(
+    photos = bot.telegram.send_photo(
         user_id,
         photo=img,
         caption=title,
@@ -77,9 +77,10 @@ def show_meme(message, bot: Leonard, user_id=None):
         Key={
             'postId': post_id
         },
-        UpdateExpression="ADD viewed :user_id",
+        UpdateExpression="ADD viewed :user_id SET file_id = :file_id",
         ExpressionAttributeValues={
-            ':user_id': {int(user_id)}
+            ':user_id': {int(user_id)},
+            ':file_id': str(max(photos['photo'], key=lambda x: x['width'])['file_id'])
         }
     )
 
@@ -88,4 +89,6 @@ def get_meme(bot: Leonard, user_id):
     meme = choice(bot.nine_gag.scan(
         FilterExpression=~Attr('viewed').contains(user_id)
     )['Items'])
-    return meme['title'], meme['img'], meme['postId']
+    return meme['title'], \
+           meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
+           meme['postId']
