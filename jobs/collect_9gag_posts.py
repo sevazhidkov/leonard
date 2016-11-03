@@ -25,6 +25,6 @@ if __name__ == '__main__':
                 'img': img,
                 'createdAt': int(time.time()),
                 'viewed': {-1},
-                'file_id': ''
+                'file_id': False
             }
         )
