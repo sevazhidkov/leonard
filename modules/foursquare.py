@@ -112,7 +112,8 @@ def search_results(message, bot):
         SEARCH_RESULT.render(
             venue=results[0]
         ),
-        reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN
+        reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN,
+        disable_web_page_preview=True
     )
 
 
@@ -126,7 +127,8 @@ def get_location_callback(query, bot):
         bot.telegram.editMessageReplyMarkup(
             reply_markup=telegram.InlineKeyboardMarkup([]),
             chat_id=query.message.chat_id,
-            message_id=query.message.message_id
+            message_id=query.message.message_id,
+            disable_web_page_preview=True
         )
     except telegram.error.BadRequest:
         pass
@@ -142,8 +144,8 @@ def get_location_callback(query, bot):
         query.u_id,
         SEARCH_RESULT.render(venue=results[cur_result]),
         reply_markup=reply_markup,
-        parse_mode=telegram.ParseMode.MARKDOWN
-
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        disable_web_page_preview=True
     )
 
 
@@ -178,7 +180,8 @@ def edit_current_result(venue, cur_result, query, results, bot):
         text=SEARCH_RESULT.render(venue=venue),
         parse_mode=telegram.ParseMode.MARKDOWN,
         chat_id=query.message.chat_id,
-        message_id=query.message.message_id
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
     )
     bot.telegram.editMessageReplyMarkup(
         reply_markup=build_result_keyboard(venue, cur_result, len(results) - 1),
