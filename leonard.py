@@ -86,6 +86,8 @@ class Leonard:
         try:
             tracker = self.handlers[current_handler](message, self)
         except Exception as error:
+            if self.debug:
+                raise error
             self.logger.error(error)
 
             self.user_set(message.u_id, 'handler', self.default_handler)

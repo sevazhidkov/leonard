@@ -71,12 +71,12 @@ def results_view(message, bot):
     bot.user_set(message.u_id, 'vinci:photo_id', response['preload'])
     bot.logger.info('Vinci photo id: {}'.format(response['preload']))
     bot.user_set(message.u_id, 'vinci:current_filter', 0)
-    bot.telegram.send_photo(message.u_id, photo=VINCI_PROCESS.format(
-        response['preload'], filters[0]['id'],
-        reply_markup=build_results_keyboard(0, message, bot)
-    ))
-    bot.telegram.send_message(message.u_id, filters[0]['name'] + ' ' + filters[0]['emoji'],
-                              reply_markup=build_results_keyboard(0, message, bot))
+    bot.telegram.send_photo(
+        message.u_id,
+        photo=VINCI_PROCESS.format(response['preload'], filters[0]['id']),
+        reply_markup=build_results_keyboard(0, message, bot),
+        caption=filters[0]['name'] + ' ' + filters[0]['emoji']
+    )
 
 
 def results_iteration(message, bot):
@@ -101,11 +101,12 @@ def results_iteration(message, bot):
             filter_num = int(bot.user_get(message.u_id, 'vinci:next_filter'))
             new_filter = filters[filter_num]
     photo_id = bot.user_get(message.u_id, 'vinci:photo_id')
-    bot.telegram.send_photo(message.u_id, photo=VINCI_PROCESS.format(
-        photo_id, new_filter['id']
-    ))
-    bot.telegram.send_message(message.u_id, new_filter['name'] + ' ' + new_filter['emoji'],
-                              reply_markup=build_results_keyboard(filter_num, message, bot))
+    bot.telegram.send_photo(
+        message.u_id,
+        photo=VINCI_PROCESS.format(photo_id, new_filter['id']),
+        caption=new_filter['name'] + ' ' + new_filter['emoji'],
+        reply_markup=build_results_keyboard(filter_num, message, bot)
+    )
 
 
 def build_results_keyboard(filter_num, message, bot):

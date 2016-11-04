@@ -10,7 +10,7 @@ import telegram
 from libs.googleapis import shorten_url
 
 NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n\n{{entry.description}}\n\n{{entry.url}}")
-NEWS_API_URL = jinja2.Template("https://newsapi.org/v1/articles?source={{source}}&apiKey={{api_key}}")
+NEWS_API_URL = 'https://newsapi.org/v1/articles'
 NEWS_API_TOKEN = os.environ['NEWSAPI_TOKEN']
 NEWS_SOURCE = "google-news"
 NEWS_TTL = 1800
@@ -21,6 +21,7 @@ def register(bot):
 
     bot.callback_handlers["news-next-entry"] = next_entry
     bot.callback_handlers["news-last-entry"] = last_entry
+
 
 def send_news(message, bot):
     news = get_news(bot)
@@ -34,11 +35,13 @@ def send_news(message, bot):
                               reply_markup=reply_markup,
                               disable_web_page_preview=True)
 
+
 def next_entry(query, bot):
     news = get_news(bot)
     next_entry = int(bot.user_get(query.u_id, "news:cur_entry")) + 1
     bot.user_set(query.u_id, "news:cur_entry", next_entry)
     edit_current_entry(news[next_entry], query, next_entry, bot)
+
 
 def last_entry(query, bot):
     news = get_news(bot)
@@ -46,12 +49,15 @@ def last_entry(query, bot):
     bot.user_set(query.u_id, "news:cur_entry", next_entry)
     edit_current_entry(news[next_entry], query, next_entry, bot)
 
+
 def get_news(bot):
     news = bot.redis.get("news:cache")
 
     if news is None:
-        request = requests.get(NEWS_API_URL.render(source = NEWS_SOURCE, api_key = NEWS_API_TOKEN)).text
-        news = json.loads(request)["articles"]
+        news = requests.get(
+            NEWS_API_URL,
+            params={'source': NEWS_SOURCE, 'api_key': NEWS_API_TOKEN}
+        ).json()['articles']
 
         for article in news:
             article['title'] = espace_markdown_symbols(article['title'])
@@ -64,6 +70,7 @@ def get_news(bot):
         news = json.loads(news.decode())
 
     return news
+
 
 def edit_current_entry(entry, query, cur_page, bot):
     bot.telegram.editMessageText(
