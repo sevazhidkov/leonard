@@ -63,7 +63,7 @@ def search_results(message, bot):
     bot.telegram.send_message(message.u_id, WAIT_A_SECOND, reply_markup=bot.get_menu(message))
     query = message.text
     location = json.loads(bot.user_get(message.u_id, 'location'))
-    response = client.venues.search(
+    response = client.venues.explore(
         params={'query': query, 'll': '{},{}'.format(location['lat'], location['long'])}
     )
     bot.logger.info('Foursquare answer: {}'.format(response))
