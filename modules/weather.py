@@ -211,19 +211,9 @@ def send_show_forecast_evening(bot, args):
             weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
         else:
             weather_data = json.loads(data)
-        hours = []
-        for i in range(0, min(25 - u_hour, len(weather_data['hourly']['data']))):
-            hour_weather = weather_data['hourly']['data'][i]
-            hours.append({
-                'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
-                'temperature': hour_weather['temperature'],
-                'summary': hour_weather['summary'],
-                'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
-            })
-        text = FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours)
         tomorrow = weather_data['daily']['data'][1]
-        text += '\n\n' + SUMMARY_MESSAGE.render(
-            name='tomorrow',
+        text = SUMMARY_MESSAGE.render(
+            name='brief tomorrow',
             summary=tomorrow['summary'],
             wind_speed=tomorrow['windSpeed'],
             emoji=WEATHER_ICONS.get(tomorrow['icon'], ''),
