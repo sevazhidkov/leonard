@@ -56,7 +56,7 @@ def get_news(bot):
     if news is None:
         news = requests.get(
             NEWS_API_URL,
-            params={'source': NEWS_SOURCE, 'api_key': NEWS_API_TOKEN}
+            params={'source': NEWS_SOURCE, 'apiKey': NEWS_API_TOKEN}
         ).json()['articles']
 
         for article in news:
