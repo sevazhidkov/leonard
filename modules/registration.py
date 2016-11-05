@@ -24,7 +24,7 @@ def welcome_message(message, bot):
         chat_id=message.u_id,
         text=WELCOME_MESSSAGE_TEMPLATE.render(first_name=message.from_user.first_name)
     )
-    bot.call_handler(message, 'subscribes-setup')
+    bot.call_handler(message, 'subscriptions-setup')
 
 
 def welcome_setup_result(message, bot):

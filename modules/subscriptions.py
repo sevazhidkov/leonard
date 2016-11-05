@@ -4,6 +4,14 @@ import jinja2
 from leonard import Leonard
 from modules import weather
 
+SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'Morning weather 🌅',
+                     'on_add': 'Yay! Next morning I\'ll send your forecast'},
+                    {'plugin': 'weather', 'name': 'rain-notifications', 'text': 'Before rain ☔'}],
+                   [{'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}]]
+
+DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
+DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'
+
 INITIAL_WEATHER_OFFER = jinja2.Template("""You shouldn't write me to get help – you can subscribe to some notification messages.
 
 ⛅ Maybe weather? Morning forecasts or "Rain in next hour" reports?
@@ -15,14 +23,17 @@ WEATHER_SETUP_RESULT = jinja2.Template(
 
 
 def register(bot: Leonard):
-    bot.handlers['subscribes-setup'] = subscriptions_setup
-    bot.handlers['subscribes-setup-result'] = subscriptions_setup_result
+    bot.handlers['subscriptions-setup'] = subscriptions_setup
+    bot.handlers['subscriptions-setup-result'] = subscriptions_setup_result
     bot.handlers['subscriptions-show'] = show_subscriptions
     bot.handlers['subscription-set'] = set_subscription
 
 
+# REGISTRATION HANDLERS
+
+
 def subscriptions_setup(message, bot: Leonard):
-    bot.user_set(message.u_id, 'next_handler', 'subscribes-setup-result')
+    bot.user_set(message.u_id, 'next_handler', 'subscriptions-setup-result')
     bot.telegram.send_message(
         chat_id=message.u_id,
         text=INITIAL_WEATHER_OFFER.render(),
@@ -39,7 +50,7 @@ def subscriptions_setup_result(message, bot: Leonard):
     if '🌄' in message.text:
         key = base_key.format('morning-forecast')
     elif '☔️' in message.text:
-        key = base_key.format('rain-forecast')
+        key = base_key.format('rain-notifications')
     else:
         key = None
     bot.telegram.send_message(
@@ -53,53 +64,60 @@ def subscriptions_setup_result(message, bot: Leonard):
     bot.call_handler(message, 'welcome-location-setup')
 
 
+# SUBSCRIPTIONS MENU HANDLERS
+
+
 def show_subscriptions(message, bot: Leonard):
     bot.user_set(message.u_id, 'next_handler', 'subscription-set')
-    reply_markup = telegram.ReplyKeyboardMarkup(
-        [[telegram.KeyboardButton('{} {}'.format(
-            '✅' if get_subscription_status(bot, message.u_id, shortcut[0]) else '❌',
-            sub
-        ))] for chosen_subscription in bot.available_subscriptions.values()
-         for sub, shortcut in chosen_subscription.items()])
-    reply_markup.keyboard.append([telegram.KeyboardButton(bot.MENU_BUTTON)])
+    keyboard = build_subscribes_keyboard(message, bot)
     bot.telegram.send_message(
         message.u_id,
-        ("I can send you periodical messages about something happens around you.\n"
-         "Look what I can offer you. 🙂").format(sum(map(len, reply_markup.keyboard))),
-        reply_markup=reply_markup,
-        parse_mode=telegram.ParseMode.MARKDOWN
+        "I can send you periodical messages about something happens around you.\n\n"
+        "Look what I can offer you. 🙂",
+        reply_markup=telegram.ReplyKeyboardMarkup(keyboard)
     )
 
 
 def set_subscription(message, bot: Leonard):
-    plugin = [name for name, y in bot.available_subscriptions.items() for _ in y.keys() if
-              message.text[2:].startswith(_)]
-    if not plugin:
-        bot.call_handler(message, 'main-menu')
-        return
-    plugin = plugin[0]
-    text = message.text
-    text = text[2:]
-
-    subscription = bot.available_subscriptions[plugin][text]
-    if get_subscription_status(bot, message.u_id, subscription[0]):
-        bot.user_delete(message.u_id, 'notifications:{}:{}'.format(plugin, subscription[0]))
-        text = 'You have been successfully unsubscribed from "{}"'.format(text) \
-            if len(subscription) == 1 else subscription[1][1]
+    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
+    active_subscription = None
+    for line in SUBSCRIBES_MENU:
+        for row in line:
+            if row['text'] in message.text:
+                active_subscription = row
+                break
+        if active_subscription:
+            break
     else:
-        bot.user_set(message.u_id, 'notifications:{}:{}'.format(plugin, subscription[0]), 1)
-        text = 'You have been successfully subscribed to "{}"'.format(text) \
-            if len(subscription) == 1 else subscription[1][0]
+        bot.call_handler(message, 'subscriptions-show')
+        return
+
+    key = 'notifications:{}:{}'.format(active_subscription['plugin'], active_subscription['name'])
+    current_status = bot.user_get(message.u_id, key)
+    if current_status == '1':
+        bot.user_set(message.u_id, key, '')
+        reply_text = active_subscription.get('on_delete', DEFAULT_UNSUBSCRIBE_TEXT)
+    else:
+        bot.user_set(message.u_id, key, '1')
+        reply_text = active_subscription.get('on_add', DEFAULT_SUBSCRIBE_TEXT)
     bot.telegram.send_message(
-        message.u_id,
-        text,
-        reply_markup=telegram.ReplyKeyboardHide(),
-        parse_mode=telegram.ParseMode.MARKDOWN
+        message.u_id, reply_text,
+        reply_markup=telegram.ReplyKeyboardMarkup(build_subscribes_keyboard(message, bot))
     )
-    bot.call_handler(message, 'subscriptions-show')
 
 
-def get_subscription_status(bot: Leonard, user_id, shortcut):
-    plugin = [name for name, y in bot.available_subscriptions.items() for params in y.values() if
-              shortcut == params[0]]
-    return bot.user_get(user_id, 'notifications:{}:{}'.format(plugin[0], shortcut))
+def build_subscribes_keyboard(message, bot):
+    keyboard = []
+    for line in SUBSCRIBES_MENU:
+        subkeyboard = []
+        for row in line:
+            row_status = bot.user_get(message.u_id, 'notifications:{}:{}'.format(row['plugin'], row['name']))
+            if row_status == '1':
+                status_emoji = '✅'
+            else:
+                status_emoji = '❌'
+            subkeyboard.append(status_emoji + ' ' + row['text'])
+        if subkeyboard:
+            keyboard.append(subkeyboard)
+    keyboard.append([bot.MENU_BUTTON])
+    return keyboard

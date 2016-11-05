@@ -40,18 +40,12 @@ class Leonard:
         self.logger = logger
 
         self.subscriptions = []
-        self.available_subscriptions = {}
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
             if plugin_name.endswith('.py'):
                 plugin = importlib.import_module('modules.{}'.format(plugin_name.rstrip('.py')))
-                if hasattr(plugin, 'SUBSCRIBES'):
-                    self.available_subscriptions[
-                        plugin.NAME if hasattr(plugin, 'NAME') else plugin_name.rstrip('.py')
-                    ] = (plugin.ORDER, plugin.SUBSCRIBES)
                 plugin.register(self)
-        self.available_subscriptions = collections.OrderedDict([(x, y[1]) for x, y in sorted(self.available_subscriptions.items(), key=lambda x: x[1][0])])
 
     def send_message(self, *args, **kwargs):
         if 'reply_markup' not in kwargs:

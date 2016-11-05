@@ -10,5 +10,5 @@ bot = Leonard(telegram_client)
 bot.collect_plugins()
 
 if __name__ == '__main__':
-    for name, check, send in bot.subscriptions:
-        send(bot, check(bot))
+    for subscription in bot.subscriptions:
+        subscription['send'](bot, subscription['check'](bot))

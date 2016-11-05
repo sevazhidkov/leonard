@@ -2,25 +2,15 @@ import collections
 import json
 from random import choice
 
-import arrow
 import pytz
 import boto3
 from boto3.dynamodb.conditions import Attr, AttributeNotExists
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from leonard import Leonard
+from libs.timezone import local_time
 
-NAME = '9GAG'
-ORDER = 2
-
-SUBSCRIBES = collections.OrderedDict([
-    ('New memes every day 🤗', [
-        'meme-day',
-        ('Now next day will be happier than previous! 😀',
-         'No more daily memes, unfortunately. 😓'),
-        (10, 11, 12)
-    ]),
-])
+DAILY_MEME_HOURS = [10, 11, 12]
 
 dynamo = boto3.resource('dynamodb', 'eu-west-1')
 
@@ -30,33 +20,31 @@ def register(bot):
 
     bot.handlers['meme-show'] = show_meme
 
-    bot.subscriptions.append((
-        '{}:{}'.format(NAME, list(SUBSCRIBES.values())[0][0]),
-        check_show_meme_day,
-        send_meme_day
-    ))
+    bot.subscriptions.append({'name': 'daily-meme', 'check': daily_meme_check,
+                              'send': daily_meme_send})
 
 
-def check_show_meme_day(bot: Leonard):
-    key = list(SUBSCRIBES.values())[0][0]
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, key))
-    users = list(map(lambda x: x.decode('utf-8').split(':')[1], users)) if users else []
+def daily_meme_check(bot: Leonard):
     result = []
-    for u_id in users:
-        location = bot.user_get(u_id, 'location')
-        if not location:
-            timezone = pytz.timezone('UTC')
-        else:
-            user = json.loads(location)
-            timezone = pytz.timezone(user['timezone'])
-        if arrow.now(timezone).datetime.hour in list(SUBSCRIBES.values())[0][2] and (
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, key)) or 0) <= 0:
-            result.append(u_id)
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, key), 1, 24 * 60 * 60)
+
+    for key in bot.redis.scan_iter(match='user:*:notifications:9gag:daily-meme'):
+        key = key.decode('utf-8')
+        status = bot.redis.get(key).decode('utf-8')
+        sent = bot.redis.get(key + ':sent')
+        if status != '1' or (sent and sent.decode('utf-8') == '1'):
+            continue
+        _, user_id, _, _, _ = key.split(':')
+
+        time = local_time(bot, int(user_id))
+
+        if time.hour in DAILY_MEME_HOURS:
+            bot.redis.set(key + ':sent', '1', ex=(len(DAILY_MEME_HOURS) + 1) * 60 * 60)
+            result.append(int(user_id))
+
     return result
 
 
-def send_meme_day(bot: Leonard, users):
+def daily_meme_send(bot: Leonard, users):
     for u_id in users:
         bot.telegram.send_message(u_id, 'Here is your daily meme, my friend! 😆')
         show_meme(None, bot, u_id)

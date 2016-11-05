@@ -68,13 +68,13 @@ SUBSCRIBES = collections.OrderedDict([
 
 def register(bot):
     bot.handlers['weather-show'] = show_weather
-    bot.handlers['weather-change'] = change_weather
-    bot.handlers['weather-hour'] = hour_forecast
 
-    bot.subscriptions.append(('{}:morning-forecast'.format(NAME), check_show_weather_morning, send_show_forecast))
-    bot.subscriptions.append(
-        ('{}:evening-forecast'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
-    bot.subscriptions.append(('{}:rain-forecast'.format(NAME), check_send_notification_rain, send_notification_rain))
+    bot.callback_handlers['weather-change'] = change_weather
+
+    # bot.subscriptions.append(('{}:morning-forecast'.format(NAME), check_show_weather_morning, send_show_forecast))
+    # bot.subscriptions.append(
+    #    ('{}:evening-forecast'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
+    # bot.subscriptions.append(('{}:rain-forecast'.format(NAME), check_send_notification_rain, send_notification_rain))
 
 
 def check_show_weather_morning(bot: Leonard):
