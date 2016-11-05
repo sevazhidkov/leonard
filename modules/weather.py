@@ -16,19 +16,19 @@ from modules.location import set_location
 NAME = 'Weather'
 ORDER = 1
 
-WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
+WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} {{ temp }}*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n\n{{ day_summary }}")
 FORECAST_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n{% for hour in hours %}"
-                                   "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
+                                   "{{ hour.time }} – *{{ hour.temperature }} {{ temp }}*, "
                                    "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
 
 SUMMARY_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n"
                                   "_{{ summary }}_ {{ emoji }}\n"
                                   "_Wind speed_ - *{{ wind_speed }} MPH*\n"
-                                  "_Temperature_ - *{{ temperature_min }} ℉ - {{ temperature_max }} ℉*\n")
+                                  "_Temperature_ - *{{ temperature_min }} ℉ - {{ temperature_max }} {{ temp }}*\n")
 
 RAIN_SOON = jinja2.Template("☔ ☔ ☔\nThere will be rain soon:\n\n{% for hour in hours %}"
-                            "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
+                            "{{ hour.time }} – *{{ hour.temperature }} {{ temp }}*, "
                             "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
 ENDPOINT_URL = 'https://api.darksky.net/forecast/{}'.format(os.environ['DARKSKY_TOKEN'])
 
@@ -51,7 +51,8 @@ WEATHER_ICONS = {
 SUBSCRIBES = collections.OrderedDict([
     ('Weather forecast every morning 🌇', [
         'morning-forecast',
-        ('Well, now every morning I will send weather forecasts specially for you ☺️', 'No more morning forecasts, honey.'),
+        ('Well, now every morning I will send weather forecasts specially for you ☺️',
+         'No more morning forecasts, honey.'),
         (8, 9, 10, 11)
     ]),
     ('Tomorrow forecast every evening 🌃', [
@@ -185,19 +186,26 @@ def change_weather(message, bot):
 
 
 def build_basic_forecast(location, user_id, bot):
-    weather_data = get_weather(location['lat'], location['long'])
+    temperature = bot.user_get(user_id, 'temperature', 'F')
+    weather_data = get_weather(location['lat'], location['long'], temperature)
     bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
     reply_markup = telegram.ReplyKeyboardMarkup(
         [[telegram.KeyboardButton(HOUR_FORECAST_BUTTON),
           telegram.KeyboardButton(OTHER_LOCATION_BUTTON, request_location=True)],
          [telegram.KeyboardButton(bot.MENU_BUTTON)]]
     )
+    temp = bot.user_get(user_id, 'temperature', 'F')
+    if temp == 'F':
+        temp = '℉'
+    else:
+        temp = '℃'
     weather_message = WEATHER_MESSAGE.render(
         temperature=weather_data['currently']['temperature'],
         summary=weather_data['currently']['summary'],
         emoji=WEATHER_ICONS.get(weather_data['currently']['icon'], ''),
         day_summary=weather_data['hourly']['summary'],
-        data=str(weather_data)[:100]
+        data=str(weather_data)[:100],
+        temp=temp
     )
     return weather_message, reply_markup
 
@@ -212,13 +220,19 @@ def send_show_forecast_evening(bot, args):
         else:
             weather_data = json.loads(data)
         tomorrow = weather_data['daily']['data'][1]
+        temp = bot.user_get(u_id, 'temperature', 'F')
+        if temp == 'F':
+            temp = '℉'
+        else:
+            temp = '℃'
         text = SUMMARY_MESSAGE.render(
             name='brief tomorrow',
             summary=tomorrow['summary'],
             wind_speed=tomorrow['windSpeed'],
             emoji=WEATHER_ICONS.get(tomorrow['icon'], ''),
             temperature_min=tomorrow['temperatureMin'],
-            temperature_max=tomorrow['temperatureMax']
+            temperature_max=tomorrow['temperatureMax'],
+            temp=temp
         )
 
         bot.telegram.send_message(u_id, text, parse_mode=telegram.ParseMode.MARKDOWN)
@@ -242,8 +256,16 @@ def send_show_forecast(bot, args):
                 'summary': hour_weather['summary'],
                 'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
             })
-        bot.telegram.send_message(u_id, FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours),
-                                  parse_mode=telegram.ParseMode.MARKDOWN)
+        temp = bot.user_get(u_id, 'temperature', 'F')
+        if temp == 'F':
+            temp = '℉'
+        else:
+            temp = '℃'
+        bot.telegram.send_message(
+            u_id,
+            FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours, temp=temp),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
 
 
 def hour_forecast(message, bot, name='hour', to_render=FORECAST_MESSAGE, u_id=None, only=None):
@@ -268,11 +290,19 @@ def hour_forecast(message, bot, name='hour', to_render=FORECAST_MESSAGE, u_id=No
     if only:
         hours = [x for x in hours[1:] if only in x['summary'].lower()]
     reply_markup = None if only else telegram.ReplyKeyboardHide()
-    bot.telegram.send_message(user_id, to_render.render(name=name, hours=hours),
+    temp = bot.user_get(u_id, 'temperature', 'F')
+    if temp == 'F':
+        temp = '℉'
+    else:
+        temp = '℃'
+    bot.telegram.send_message(user_id, to_render.render(name=name, hours=hours, temp=temp),
                               reply_markup=reply_markup,
                               parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def get_weather(lat, lng):
-    response = requests.get(ENDPOINT_URL + '/{},{}'.format(lat, lng))
+def get_weather(lat, lng, temperature):
+    if temperature == 'C':
+        response = requests.get(ENDPOINT_URL + '/{},{}?units=si'.format(lat, lng))
+    else:
+        response = requests.get(ENDPOINT_URL + '/{},{}'.format(lat, lng))
     return response.json()
