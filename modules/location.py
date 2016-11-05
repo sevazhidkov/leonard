@@ -41,7 +41,7 @@ def geocode(location_name, bot=None):
     }
 
 
-def reverse_geocode(lat, long, bot=None):
+def reverse_geocode(user_id, lat, long, bot=None, exclude_timezone=False):
     response = geocoder.reverse(long, lat).json()
     if bot:
         bot.logger.info('Mapbox response: {}'.format(response))
@@ -50,13 +50,18 @@ def reverse_geocode(lat, long, bot=None):
     for context in place['context']:
         if context['id'].startswith('country'):
             country = context['short_code']
+    timezone = get_timezone(place['center'][1], place['center'][0])
+    if exclude_timezone:
+        location = json.loads(bot.user_get(user_id, 'location'))
+        if 'timezone' in location:
+            timezone = location['timezone']
     return {
         'long': place['center'][0],
         'lat': place['center'][1],
         'full_name': place.get('place_name'),
         'name': place.get('text'),
         'country': country,
-        'timezone': get_timezone(place['center'][1], place['center'][0])
+        'timezone': timezone
     }
 
 
@@ -79,7 +84,7 @@ def location_setup_result(message, bot):
     bot.call_handler(message, 'welcome-setup-result')
 
 
-def set_location(bot, u_id, location):
-    result = reverse_geocode(location['latitude'], location['longitude'], bot)
+def set_location(bot, u_id, location, exclude_timezone=False):
+    result = reverse_geocode(u_id, location['latitude'], location['longitude'], bot, exclude_timezone)
     bot.user_set(u_id, 'location', json.dumps(result))
     return result
