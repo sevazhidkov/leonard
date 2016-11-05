@@ -17,4 +17,4 @@ feedparser
 boto3
 beautifulsoup4
 lxml
-PIL
+Pillow
