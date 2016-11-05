@@ -246,7 +246,7 @@ def send_show_forecast(bot, args):
                                   parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def hour_forecast(message, bot, name=None, to_render=FORECAST_MESSAGE, u_id=None, only=None):
+def hour_forecast(message, bot, name='hour', to_render=FORECAST_MESSAGE, u_id=None, only=None):
     if message:
         user_id = message.u_id
     else:
