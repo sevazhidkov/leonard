@@ -1,7 +1,6 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from modules.location import set_location
 
-CHANGE_TEMP = 'Change Celsius/Fahrenheit'
 CHANGE_LOCATION = 'Change location'
 
 
@@ -25,6 +24,6 @@ def show_settings(message, bot):
 def change_settings(message, bot):
     user_id = message.u_id
     if message.location:
-        set_location(bot, user_id, message.location, True)
+        set_location(bot, user_id, message.location)
         bot.send_message(user_id, 'Your location has been changed, now you will get weather in your current city')
     bot.call_handler(message, 'main-menu')
