@@ -3,14 +3,11 @@ from modules.location import set_location
 
 CHANGE_TEMP = 'Change Celsius/Fahrenheit'
 CHANGE_LOCATION = 'Change location'
-CHANGE_TIMEZONE = 'Change timezone'
 
 
 def register(bot):
     bot.handlers['settings-show'] = show_settings
     bot.handlers['settings-change'] = change_settings
-    # bot.handlers['temperature-change'] = change_temperature
-    # bot.handlers['timezone-change'] = change_timezone
 
 
 def show_settings(message, bot):
