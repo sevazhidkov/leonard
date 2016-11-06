@@ -64,7 +64,7 @@ def send_to_amplitude(bot, message, handler):
         'time': time.mktime(message.date.timetuple()),
         'proceed_time': time.time(),
         'user_id': message.from_user.id,
-        'event_type': handler,
+        'event_type': handler if not hasattr(message, 'handler') else message.handler,
         'event_properties': {
             'text': message.text
         }
