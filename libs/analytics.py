@@ -1,5 +1,8 @@
+import os
 import time
 import boto3
+import json
+import requests
 
 dynamodb = boto3.client('dynamodb', 'eu-west-1')
 
@@ -29,7 +32,6 @@ class Tracker:
             'u_id': self.u_id
         })
 
-
     def timer_start(self, timer_name):
         self.timer_start[timer_name] = time.time()
 
@@ -56,8 +58,29 @@ class Tracker:
             )
 
 
+def send_to_amplitude(bot, message, handler):
+    event = {
+        'id': message.message_id,
+        'time': time.mktime(message.date.timetuple()),
+        'proceed_time': time.time(),
+        'user_id': message.from_user.id,
+        'event_type': handler,
+        'event_properties': {
+            'text': message.text
+        }
+    }
+    location = bot.user_get(message.from_user.id, 'location', '')
+    if location:
+        location = json.loads(location)
+        event['country'] = location['country']
+        event['city'] = location['name']
+    requests.post('https://api.amplitude.com/httpapi', data={
+        'api_key': os.environ['AMPLITUDE_API_KEY'],
+        'event': json.dumps([event])
+    })
 
-def track_message(message, handler, tracker=None):
+
+def track_message(bot, message, handler, tracker=None):
     dynamodb.put_item(
         TableName='LeonardBotUserMessage',
         Item=prepare_to_dynamo({
@@ -72,6 +95,7 @@ def track_message(message, handler, tracker=None):
 
     if tracker:
         tracker.send()
+    send_to_amplitude(bot, message, handler)
 
 
 def prepare_to_dynamo(item):

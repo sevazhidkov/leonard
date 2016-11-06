@@ -1,6 +1,7 @@
 import os
 import logging
 import importlib
+from threading import Thread
 
 import boto3
 import collections
@@ -77,7 +78,7 @@ class Leonard:
         # Go back to menu haves the largest priority
         if message.text == self.MENU_BUTTON:
             tracker = self.call_handler(message, self.default_handler)
-            track_message(message, current_handler, tracker)
+            Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
             return
 
         self.user_set(message.u_id, 'handler', current_handler)
@@ -94,7 +95,7 @@ class Leonard:
 
             return
 
-        track_message(message, current_handler, tracker)
+        Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
