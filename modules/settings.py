@@ -15,7 +15,6 @@ def show_settings(message, bot):
         message.u_id,
         'What do you want to change in my behaviour?',
         reply_markup=ReplyKeyboardMarkup([
-            [KeyboardButton(CHANGE_TEMP)],
             [KeyboardButton(CHANGE_LOCATION, request_location=True)],
             [bot.MENU_BUTTON]
         ])
@@ -28,13 +27,4 @@ def change_settings(message, bot):
     if message.location:
         set_location(bot, user_id, message.location, True)
         bot.send_message(user_id, 'Your location has been changed, now you will get weather in your city')
-    elif message.text == CHANGE_TEMP:
-        was = bot.user_get(user_id, 'temperature', 'F')
-        if was == 'F':
-            bot.user_set(user_id, 'temperature', 'C')
-            now = 'Celsius'
-        else:
-            bot.user_set(user_id, 'temperature', 'F')
-            now = 'Fahrenheit'
-        bot.send_message(user_id, 'Alright, all weather forecasts will be in ' + now)
     bot.call_handler(message, 'settings-show')
