@@ -13,7 +13,7 @@ def register(bot):
 def show_settings(message, bot):
     bot.telegram.send_message(
         message.u_id,
-        'What do you want to change in my behaviour?',
+        'Hm... What do you want to change?',
         reply_markup=ReplyKeyboardMarkup([
             [KeyboardButton(CHANGE_LOCATION, request_location=True)],
             [bot.MENU_BUTTON]
@@ -26,5 +26,5 @@ def change_settings(message, bot):
     user_id = message.u_id
     if message.location:
         set_location(bot, user_id, message.location, True)
-        bot.send_message(user_id, 'Your location has been changed, now you will get weather in your city')
-    bot.call_handler(message, 'settings-show')
+        bot.send_message(user_id, 'Your location has been changed, now you will get weather in your current city')
+    bot.call_handler(message, 'main-menu')
