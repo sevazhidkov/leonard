@@ -59,18 +59,21 @@ class Tracker:
 
 
 def send_to_amplitude(bot, message, handler, event_type):
+    event = {
+        'id': message.message_id,
+        'time': time.mktime(message.date.timetuple()),
+        'proceed_time': time.time(),
+        'text': message.text,
+        'user_id': message.from_user.id,
+        'handler': handler,
+        'event_type': event_type,
+    }
+    location = bot.user_get(message.from_user.id, 'location', '')
+    if location:
+        event['country'] = json.loads(location)['country']
     requests.post('https://api.amplitude.com/httpapi', data={
         'api_key': os.environ['AMPLITUDE_API_KEY'],
-        'event': json.dumps([{
-            'id': message.message_id,
-            'time': time.mktime(message.date.timetuple()),
-            'proceed_time': time.time(),
-            'text': message.text,
-            'user_id': message.from_user.id,
-            'handler': handler,
-            'event_type': event_type,
-            'country': json.loads(bot.user_get(message.from_user.id, 'location'))['country']
-        }])
+        'event': json.dumps([event])
     })
 
 
