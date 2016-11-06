@@ -58,16 +58,15 @@ class Tracker:
             )
 
 
-def send_to_amplitude(bot, message, handler, event_type):
+def send_to_amplitude(bot, message, handler):
     event = {
         'id': message.message_id,
         'time': time.mktime(message.date.timetuple()),
         'proceed_time': time.time(),
         'user_id': message.from_user.id,
-        'event_type': event_type,
+        'event_type': handler,
         'event_properties': {
-            'text': message.text,
-            'handler': handler
+            'text': message.text
         }
     }
     location = bot.user_get(message.from_user.id, 'location', '')
@@ -96,7 +95,7 @@ def track_message(bot, message, handler, tracker=None):
 
     if tracker:
         tracker.send()
-    send_to_amplitude(bot, message, handler, 'track_message')
+    send_to_amplitude(bot, message, handler)
 
 
 def prepare_to_dynamo(item):
