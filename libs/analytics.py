@@ -63,14 +63,18 @@ def send_to_amplitude(bot, message, handler, event_type):
         'id': message.message_id,
         'time': time.mktime(message.date.timetuple()),
         'proceed_time': time.time(),
-        'text': message.text,
         'user_id': message.from_user.id,
-        'handler': handler,
         'event_type': event_type,
+        'event_properties': {
+            'text': message.text,
+            'handler': handler
+        }
     }
     location = bot.user_get(message.from_user.id, 'location', '')
     if location:
-        event['country'] = json.loads(location)['country']
+        location = json.loads(location)
+        event['country'] = location['country']
+        event['city'] = location['name']
     requests.post('https://api.amplitude.com/httpapi', data={
         'api_key': os.environ['AMPLITUDE_API_KEY'],
         'event': json.dumps([event])
