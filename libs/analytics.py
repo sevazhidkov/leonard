@@ -58,13 +58,15 @@ class Tracker:
             )
 
 
-def send_to_amplitude(bot, message, handler):
+def send_to_amplitude(bot, message):
+    if not hasattr(message, 'handler'):
+        return
     event = {
         'id': message.message_id,
         'time': time.mktime(message.date.timetuple()),
         'proceed_time': time.time(),
         'user_id': message.from_user.id,
-        'event_type': handler,
+        'event_type': message.handler,
         'event_properties': {
             'text': message.text
         }
@@ -95,7 +97,7 @@ def track_message(bot, message, handler, tracker=None):
 
     if tracker:
         tracker.send()
-    send_to_amplitude(bot, message, handler)
+    send_to_amplitude(bot, message)
 
 
 def prepare_to_dynamo(item):
