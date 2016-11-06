@@ -6,9 +6,10 @@ MENU = [[('handler', 'Places ☕', 'foursquare-location-choice'),
          ('handler', 'News 📰', 'news-get-entry')],
         [('handler', 'Vinci filters 🌇', 'vinci-upload-image'),
          ('handler', 'Get Uber 🚘', 'uber-choose-location')],
+        [('handler', '9GAG 😅', 'meme-show'),
+        ('handler', 'Product Hunt 💻', 'producthunt-get-entry')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
-         ('handler', '9GAG 😅', 'meme-show')],
-        [('handler', 'Product Hunt 💻', 'producthunt-get-entry')]]
+         ('handler', 'Settings 🔧', 'settings-show')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',
