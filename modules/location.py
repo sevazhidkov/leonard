@@ -80,6 +80,6 @@ def location_setup_result(message, bot):
 
 
 def set_location(bot, u_id, location):
-    result = reverse_geocode(u_id, location['latitude'], location['longitude'], bot)
+    result = reverse_geocode(location['latitude'], location['longitude'], bot)
     bot.user_set(u_id, 'location', json.dumps(result))
     return result
