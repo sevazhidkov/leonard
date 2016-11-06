@@ -77,7 +77,7 @@ class Leonard:
         # Go back to menu haves the largest priority
         if message.text == self.MENU_BUTTON:
             tracker = self.call_handler(message, self.default_handler)
-            track_message(message, current_handler, tracker)
+            track_message(self, message, current_handler, tracker)
             return
 
         self.user_set(message.u_id, 'handler', current_handler)
@@ -94,7 +94,7 @@ class Leonard:
 
             return
 
-        track_message(message, current_handler, tracker)
+        track_message(self, message, current_handler, tracker)
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id

@@ -58,7 +58,7 @@ class Tracker:
             )
 
 
-def send_to_amplitude(message, handler, event_type):
+def send_to_amplitude(bot, message, handler, event_type):
     requests.post('https://api.amplitude.com/httpapi', data={
         'api_key': os.environ['AMPLITUDE_API_KEY'],
         'event': json.dumps([{
@@ -68,12 +68,13 @@ def send_to_amplitude(message, handler, event_type):
             'text': message.text,
             'user_id': message.from_user.id,
             'handler': handler,
-            'event_type': event_type
+            'event_type': event_type,
+            'country': json.loads(bot.user_get(message.from_user.id, 'location'))['country']
         }])
     })
 
 
-def track_message(message, handler, tracker=None):
+def track_message(bot, message, handler, tracker=None):
     dynamodb.put_item(
         TableName='LeonardBotUserMessage',
         Item=prepare_to_dynamo({
@@ -88,7 +89,7 @@ def track_message(message, handler, tracker=None):
 
     if tracker:
         tracker.send()
-    send_to_amplitude(message, handler, 'track_message')
+    send_to_amplitude(bot, message, handler, 'track_message')
 
 
 def prepare_to_dynamo(item):
