@@ -21,6 +21,7 @@ def ask_wolfram(message, bot: Leonard):
 
 
 def get_result(message, bot: Leonard):
+    bot.telegram.send_message(message.u_id, 'Wolfram Alpha is thinking... ⌛️')
     response = bot.wolfram_client.query(message.text)
     url = 'https://www.wolframalpha.com/input/?i=' + quote_plus(message.text)
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Open on WolphramAlpha.com', url=url)]])
