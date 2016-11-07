@@ -69,13 +69,21 @@ def send_to_amplitude(bot, message):
         'event_type': message.handler,
         'event_properties': {
             'text': message.text
-        }
+        },
+        'user_properties': {}
     }
     location = bot.user_get(message.from_user.id, 'location', '')
     if location:
         location = json.loads(location)
         event['country'] = location['country']
         event['city'] = location['name']
+    user = message.from_user
+    if hasattr(user, 'username'):
+        event['user_properties']['username'] = user.username
+    if hasattr(user, 'last_name'):
+        event['user_properties']['full_name'] = user.first_name + ' ' + user.last_name
+    else:
+        event['user_properties']['full_name'] = user.first_name
     requests.post('https://api.amplitude.com/httpapi', data={
         'api_key': os.environ['AMPLITUDE_API_KEY'],
         'event': json.dumps([event])
