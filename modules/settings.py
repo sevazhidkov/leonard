@@ -1,7 +1,7 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from modules.location import set_location
 
-CHANGE_LOCATION = 'Change location'
+CHANGE_LOCATION = 'Change location 🌐'
 
 
 def register(bot):
