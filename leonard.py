@@ -5,7 +5,11 @@ from threading import Thread
 
 import boto3
 import collections
+
+import bugsnag
 import falcon
+from bugsnag.handlers import BugsnagHandler
+from bugsnag.wsgi.middleware import BugsnagMiddleware
 from redis import from_url
 
 
@@ -28,7 +32,7 @@ class Leonard:
         self.telegram = telegram_client
 
         # Flask web app
-        self.app = falcon.API()
+        self.app = BugsnagMiddleware(falcon.API())
 
         # Dict str -> function with all handlers for messages
         # and other updates
@@ -41,6 +45,11 @@ class Leonard:
         self.logger = logger
 
         self.subscriptions = []
+
+        bugsnag.configure(
+            api_key=os.environ['BUGSNAG_API_KEY'],
+            project_root=os.getcwd(),
+        )
 
     def collect_plugins(self):
         for plugin_name in os.listdir('modules'):
@@ -87,6 +96,8 @@ class Leonard:
 
             self.user_set(message.u_id, 'handler', self.default_handler)
 
+            bugsnag.notify(error)
+
             return
 
         Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
@@ -106,6 +117,8 @@ class Leonard:
             self.logger.error(error)
 
             self.user_set(query.message.u_id, 'handler', self.default_handler)
+
+            bugsnag.notify(error)
 
             return
 

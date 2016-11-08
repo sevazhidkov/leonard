@@ -89,7 +89,7 @@ def register(bot):
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
 
-    oauth_redirect = bot.app.add_route('/uber/redirect', UberRedirectResource())
+    oauth_redirect = bot.app.application.add_route('/uber/redirect', UberRedirectResource())
 
 
 def choose_current_location(message, bot):
