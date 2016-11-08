@@ -7,7 +7,9 @@ from modules import weather
 SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'Morning weather 🌅',
                      'on_add': 'Yay! Next morning I\'ll send you forecast 👌'}],
                    [{'plugin': 'weather', 'name': 'rain-notifications', 'text': 'Before rain ☔'},
-                    {'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}]]
+                    {'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}],
+                   [{'plugin': 'news', 'name': 'news-digest', 'text': 'News digest 📰',
+                    'on_add': 'Cool! I will send you news next evening 👌'}]]
 
 DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
 DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'

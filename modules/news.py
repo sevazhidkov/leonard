@@ -8,6 +8,8 @@ import redis
 import telegram
 
 from libs.googleapis import shorten_url
+from libs.timezone import local_time
+from libs.utils import FakeMessage
 
 NEWS_MESSAGE = jinja2.Template("*{{entry.title}}*\n\n{{entry.description}}\n\n{{entry.url}}")
 NEWS_API_URL = 'https://newsapi.org/v1/articles'
@@ -15,12 +17,17 @@ NEWS_API_TOKEN = os.environ['NEWSAPI_TOKEN']
 NEWS_SOURCE = "google-news"
 NEWS_TTL = 1800
 
+NEWS_DIGEST_HOURS = [18, 19, 20]
+
 
 def register(bot):
     bot.handlers["news-get-entry"] = send_news
 
     bot.callback_handlers["news-next-entry"] = next_entry
     bot.callback_handlers["news-last-entry"] = last_entry
+
+    bot.subscriptions.append({'name': 'news-digest', 'check': news_digest_check,
+                              'send': news_digest_send})
 
 
 def send_news(message, bot):
@@ -100,6 +107,37 @@ def build_result_keyboard(cur_page, article_url):
         keyboard[0].append(next_button)
 
     return telegram.InlineKeyboardMarkup(keyboard)
+
+
+# News subscription
+
+
+def news_digest_check(bot):
+    result = []
+    for key in bot.redis.scan_iter(match='user:*:notifications:news:news-digest'):
+        key = key.decode('utf-8')
+        status = bot.redis.get(key).decode('utf-8')
+        sent = bot.redis.get(key + ':sent')
+        if status != '1' or (sent and sent.decode('utf-8') == '1'):
+            continue
+        _, user_id, _, _, _ = key.split(':')
+
+        time = local_time(bot, int(user_id))
+
+        if time.hour in NEWS_DIGEST_HOURS:
+            result.append(int(user_id))
+
+    return result
+
+
+def news_digest_send(bot, users):
+    for u_id in users:
+        key = 'user:{}:notifications:news:news-digest:sent'.format(u_id)
+        bot.redis.set(key, '1', ex=(len(NEWS_DIGEST_HOURS) + 1) * 60 * 60)
+        bot.telegram.send_message(u_id, 'Hey, your evening news digest is ready 📰')
+        m = FakeMessage()
+        m.u_id = u_id
+        send_news(m, bot)
 
 
 def espace_markdown_symbols(text):
