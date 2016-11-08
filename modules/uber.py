@@ -41,10 +41,10 @@ REDIRECT_URL = os.environ['UBER_REDIRECT_URL']
 
 AUTH_URL = "https://login.uber.com/oauth/v2/authorize?client_id={}&response_type=code&scope=profile places ride_widgets request"
 TOKEN_URL = "https://login.uber.com/oauth/v2/token"
-PLACES_URL = "https://sandbox-api.uber.com/v1/places/{}"
-PRODUCTS_URL = "https://sandbox-api.uber.com/v1/products"
-ORDER_URL = "https://sandbox-api.uber.com/v1/requests"
-CURRENT_ORDER_URL = "https://sandbox-api.uber.com/v1/requests/current"
+PLACES_URL = "https://api.uber.com/v1/places/{}"
+PRODUCTS_URL = "https://api.uber.com/v1/products"
+ORDER_URL = "https://api.uber.com/v1/requests"
+CURRENT_ORDER_URL = "https://api.uber.com/v1/requests/current"
 
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
