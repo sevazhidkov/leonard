@@ -4,6 +4,7 @@ import sys
 import logging
 from time import sleep
 
+import bugsnag
 import falcon
 
 import telegram
@@ -18,7 +19,6 @@ WEBHOOK_HOSTNAME = os.environ.get('WEBHOOK_HOSTNAME', 'https://leonardbot.heroku
 class WebhookResource:
     def __init__(self, bot):
         self.bot = bot
-
 
     def on_post(self, req, resp):
         if req.content_length in (None, 0):
@@ -65,8 +65,8 @@ print('Collecting plugins')
 bot.collect_plugins()
 
 print('Setting routes')
-bot.app.add_route('/webhook/{}'.format(os.environ['BOT_TOKEN']), WebhookResource(bot))
-bot.app.add_route('/l/{query}', shrt.GetLinkResource())
+bot.app.application.add_route('/webhook/{}'.format(os.environ['BOT_TOKEN']), WebhookResource(bot))
+bot.app.application.add_route('/l/{query}', shrt.GetLinkResource())
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':
     bot.telegram.setWebhook('')
@@ -80,7 +80,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'polling':
             for update in telegram_client.getUpdates(offset=update_id, timeout=10):
                 update_id = update.update_id + 1
                 bot.process_update(update)
-        except NetworkError:
+        except NetworkError as error:
+            bugsnag.notify(error)
             sleep(1)
         except Unauthorized:
             update_id += 1
