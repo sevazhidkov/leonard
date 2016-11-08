@@ -13,27 +13,29 @@ from leonard import Leonard
 from libs.analytics import Tracker
 from modules.location import set_location
 
-NAME = 'Weather'
-ORDER = 1
-
-WEATHER_MESSAGE = jinja2.Template("Right now - *{{ temperature }} ℉*, _{{ summary|lower }}_ "
-                                  "{{ emoji }}\n\n{{ day_summary }}")
-FORECAST_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n{% for hour in hours %}"
-                                   "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
+DARKSKY_MESSAGE = 'Weather information provided by DarkSky.net'
+WEATHER_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nToday: _{{ today_date.format('MMMM DD, YYYY') }}_\n\n"
+                                  "Right now: *{{ temperature }} {{ temperature_symbol }}*, _{{ summary|lower }}_ "
+                                  "{{ emoji }}\n{{ day_summary }}\n\nTomorrow: "
+                                  "*{{ tomorrow_temperature }} {{ temperature_symbol }}*, "
+                                  "_{{ tomorrow_summary|lower }}_ {{ tomorrow_emoji }}"
+                                  "\n\n[Powered by Dark Sky](https://darksky.net/poweredby/)")
+HOURS_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nHourly forecast: 🕘\n\n{% for hour in hours %}"
+                                   "_{{ hour.time }}_ – *{{ hour.temperature|round(2) }} {{ temperature_symbol }}*, "
                                    "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
-
-SUMMARY_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nYour {{ name }} weather forecast:\n\n"
-                                  "_{{ summary }}_ {{ emoji }}\n"
-                                  "_Wind speed_ - *{{ wind_speed }} MPH*\n"
-                                  "_Temperature_ - *{{ temperature_min }} ℉ - {{ temperature_max }} ℉*\n")
+WEEK_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nWeek weather: 📅\n\n{% for day in days %}"
+                                   "_{{ day.time.format('MMMM DD, dddd') }}_ – "
+                                   "*{{ day.temperature|round(1) }} {{ temperature_symbol }}*, "
+                                   "{{ day.summary|lower }} {{ day.emoji }}\n{% endfor %}")
 
 RAIN_SOON = jinja2.Template("☔ ☔ ☔\nThere will be rain soon:\n\n{% for hour in hours %}"
                             "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
                             "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
 ENDPOINT_URL = 'https://api.darksky.net/forecast/{}'.format(os.environ['DARKSKY_TOKEN'])
 
-OTHER_LOCATION_BUTTON = 'Send other location 📍'
-HOUR_FORECAST_BUTTON = 'Hour forecast 🕘'
+BASIC_FORECAST_BUTTON = 'Summary 🌀'
+HOURS_FORECAST_BUTTON = 'Hourly 🕘'
+WEEK_FORECAST_BUTTON = 'Week 📅'
 
 WEATHER_ICONS = {
     'rain': '☔',
@@ -47,242 +49,152 @@ WEATHER_ICONS = {
     'partly-cloudy-day': '⛅',
     'partly-cloudy-night': '🌃',
 }
-
-SUBSCRIBES = collections.OrderedDict([
-    ('Weather forecast every morning 🌇', [
-        'morning-forecast',
-        ('Well, now every morning I will send weather forecasts specially for you ☺️', 'No more morning forecasts, honey.'),
-        (8, 9, 10, 11)
-    ]),
-    ('Tomorrow forecast every evening 🌃', [
-        'evening-forecast',
-        ('Now you will get evening forecast!', 'Ok, if you want, I will stop sending you evening forecasts.'),
-        (19, 20, 21, 22)
-    ]),
-    ('Notification and forecast an hour before rain ☔️', [
-        'rain-forecast',
-        ('Now you will get notification every time before rain!', 'Unfortunately, now you will be wet.'),
-    ]),
-])
+UNITS_SYMBOLS = {
+    'si': '°C',
+    'us': '℉'
+}
 
 
 def register(bot):
     bot.handlers['weather-show'] = show_weather
-
-    bot.callback_handlers['weather-change'] = change_weather
-
-    # bot.subscriptions.append(('{}:morning-forecast'.format(NAME), check_show_weather_morning, send_show_forecast))
-    # bot.subscriptions.append(
-    #    ('{}:evening-forecast'.format(NAME), check_show_weather_evening, send_show_forecast_evening))
-    # bot.subscriptions.append(('{}:rain-forecast'.format(NAME), check_send_notification_rain, send_notification_rain))
+    bot.callback_handlers['weather-basic'] = basic_forecast_callback
+    bot.callback_handlers['weather-hourly'] = hour_forecast_callback
+    bot.callback_handlers['weather-week'] = week_forecast_callback
 
 
-def check_show_weather_morning(bot: Leonard):
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'morning-forecast'))
-    return check_show_weather_condition(
-        bot,
-        list(SUBSCRIBES.values())[0][0],
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in list(SUBSCRIBES.values())[0][2],
-        users
+def show_weather(message, bot, subscription=False):
+    basic_forecast = build_basic_forecast(message.u_id, bot)
+    bot.telegram.send_message(
+        message.u_id, basic_forecast[0],
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        disable_web_page_preview=True,
+        reply_markup=basic_forecast[1]
     )
 
 
-def check_show_weather_evening(bot: Leonard):
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, 'evening-forecast'))
-    return check_show_weather_condition(
-        bot,
-        list(SUBSCRIBES.values())[1][0],
-        lambda timezone, u_id=None: arrow.now(timezone).datetime.hour in list(SUBSCRIBES.values())[1][2],
-        users
+def basic_forecast_callback(query, bot):
+    basic_forecast = build_basic_forecast(query.u_id, bot)
+    bot.telegram.editMessageText(
+        text=basic_forecast[0],
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
+    )
+    bot.telegram.editMessageReplyMarkup(
+        reply_markup=basic_forecast[1],
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
     )
 
 
-def check_send_notification_rain(bot: Leonard):
-    return check_send_notification_weather(bot, list(SUBSCRIBES.values())[2][0])
-
-
-def check_send_notification_weather(bot: Leonard, weather):
-    users = bot.redis.keys('user:*:notifications:{}:{}'.format(NAME, weather))
-    users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
-    result = []
-
-    def condition(location, uid=None):
-        data = bot.user_get(uid, 'weather:data')
-        if not data or time.time() - int(json.loads(data)['currently']['time']) > 3600:
-            build_basic_forecast(location, uid, bot)
-            weather_data = json.loads(bot.user_get(uid, 'weather:data'))
-        else:
-            weather_data = json.loads(data)
-        return any([weather.rstrip('-forecast') in x['summary'].lower() for x in weather_data['hourly']['data'][1:24]])
-
-    for u_id in users:
-        user_location = bot.user_get(u_id, 'location')
-        if not user_location:
-            continue
-        if condition(json.loads(user_location), u_id) and (
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, weather)) or 0
-        ) <= 0:
-            result.append(u_id)
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, weather), 1, 24 * 60 * 60)
-    return result
-
-
-def check_show_weather_condition(bot: Leonard, name, condition, users, expire=24 * 30 * 60):
-    users = map(lambda x: x.decode('utf-8').split(':')[1], users) if users else []
-    result = []
-    for u_id in users:
-        location = bot.user_get(u_id, 'location')
-        if not location:
-            timezone = pytz.timezone('UTC')
-        else:
-            user = json.loads(location)
-            timezone = pytz.timezone(user['timezone'])
-        if condition(timezone) and (
-                    bot.redis.ttl('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name)) or 0
-        ) <= 0:
-            result.append([int(u_id), arrow.now(timezone).datetime.hour])
-            bot.redis.setex('user:{}:notifications:{}:{}:last'.format(u_id, NAME, name), 1, expire)
-    return result, name
-
-
-def send_notification_rain(bot, users):
-    for u_id in users:
-        hour_forecast(None, bot, None, RAIN_SOON, u_id, 'rain')
-
-
-def show_weather(message, bot, u_id=None, subscription=False):
-    if message:
-        user_id = message.u_id
-    else:
-        user_id = u_id
-    tracker = Tracker('weather', u_id=user_id)
-    if not subscription:
-        bot.user_set(user_id, 'next_handler', 'weather-change')
+def build_basic_forecast(user_id, bot):
     location = json.loads(bot.user_get(user_id, 'location'))
-    text, reply_markup = build_basic_forecast(location, user_id, bot)
-    if subscription:
-        reply_markup = None
-    bot.telegram.send_message(user_id, text,
-                              reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN)
-
-    if subscription:
-        tracker.event('weather-subscription')
-    else:
-        tracker.event('weather-summary')
-
-    return tracker
-
-
-def change_weather(message, bot):
-    if message.location:
-        set_location(bot, message.u_id, message.location)
-        bot.call_handler(message, 'weather-show')
-    elif message.text == HOUR_FORECAST_BUTTON:
-        bot.call_handler(message, 'weather-hour')
-        bot.call_handler(message, 'main-menu')
-    else:
-        bot.call_handler(message, 'main-menu')
-
-
-def build_basic_forecast(location, user_id, bot):
     weather_data = get_weather(location['lat'], location['long'])
     bot.user_set(user_id, 'weather:data', json.dumps(weather_data))
-    reply_markup = telegram.ReplyKeyboardMarkup(
-        [[telegram.KeyboardButton(HOUR_FORECAST_BUTTON),
-          telegram.KeyboardButton(OTHER_LOCATION_BUTTON, request_location=True)],
-         [telegram.KeyboardButton(bot.MENU_BUTTON)]]
+    reply_markup = telegram.InlineKeyboardMarkup(
+        [[telegram.InlineKeyboardButton(HOURS_FORECAST_BUTTON, callback_data='weather-hourly'),
+          telegram.InlineKeyboardButton(WEEK_FORECAST_BUTTON, callback_data='weather-week')]]
     )
     weather_message = WEATHER_MESSAGE.render(
+        today_date=arrow.get(weather_data['currently']['time']),
+        temperature_symbol=UNITS_SYMBOLS.get(weather_data['flags']['units'], '°C'),
         temperature=weather_data['currently']['temperature'],
         summary=weather_data['currently']['summary'],
         emoji=WEATHER_ICONS.get(weather_data['currently']['icon'], ''),
         day_summary=weather_data['hourly']['summary'],
-        data=str(weather_data)[:100]
+        tomorrow_temperature=((weather_data['daily']['data'][1]['temperatureMax'] +
+                              weather_data['daily']['data'][1]['temperatureMin']) / 2),
+        tomorrow_summary=weather_data['daily']['data'][1]['summary'],
+        tomorrow_emoji=WEATHER_ICONS.get(weather_data['daily']['data'][1]['icon'], '')
     )
     return weather_message, reply_markup
 
 
-def send_show_forecast_evening(bot, args):
-    for u_id, u_hour in args[0]:
-        data = bot.user_get(u_id, 'weather:data')
-        if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
-            location = json.loads(bot.user_get(u_id, 'location'))
-            build_basic_forecast(location, u_id, bot)
-            weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
-        else:
-            weather_data = json.loads(data)
-        hours = []
-        for i in range(0, min(25 - u_hour, len(weather_data['hourly']['data']))):
-            hour_weather = weather_data['hourly']['data'][i]
-            hours.append({
-                'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
-                'temperature': hour_weather['temperature'],
-                'summary': hour_weather['summary'],
-                'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
-            })
-        text = FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours)
-        tomorrow = weather_data['daily']['data'][1]
-        text += '\n\n' + SUMMARY_MESSAGE.render(
-            name='tomorrow',
-            summary=tomorrow['summary'],
-            wind_speed=tomorrow['windSpeed'],
-            emoji=WEATHER_ICONS.get(tomorrow['icon'], ''),
-            temperature_min=tomorrow['temperatureMin'],
-            temperature_max=tomorrow['temperatureMax']
-        )
-
-        bot.telegram.send_message(u_id, text, parse_mode=telegram.ParseMode.MARKDOWN)
+def hour_forecast_callback(query, bot):
+    hour_forecast = build_hour_forecast(query.u_id, bot)
+    bot.telegram.editMessageText(
+        text=hour_forecast[0],
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
+    )
+    bot.telegram.editMessageReplyMarkup(
+        reply_markup=hour_forecast[1],
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
+    )
 
 
-def send_show_forecast(bot, args):
-    for u_id, _ in args[0]:
-        data = bot.user_get(u_id, 'weather:data')
-        if not data or time.time() - int(json.loads(data)['currently']['time']) > 1800:
-            location = json.loads(bot.user_get(u_id, 'location'))
-            build_basic_forecast(location, u_id, bot)
-            weather_data = json.loads(bot.user_get(u_id, 'weather:data'))
-        else:
-            weather_data = json.loads(data)
-        hours = []
-        for i in range(0, min(16, len(weather_data['hourly']['data'])), 3):
-            hour_weather = weather_data['hourly']['data'][i]
-            hours.append({
-                'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
-                'temperature': hour_weather['temperature'],
-                'summary': hour_weather['summary'],
-                'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
-            })
-        bot.telegram.send_message(u_id, FORECAST_MESSAGE.render(name=args[1].rstrip('-forecast'), hours=hours),
-                                  parse_mode=telegram.ParseMode.MARKDOWN)
-
-
-def hour_forecast(message, bot, name=None, to_render=FORECAST_MESSAGE, u_id=None, only=None):
-    if message:
-        user_id = message.u_id
-    else:
-        user_id = u_id
+def build_hour_forecast(user_id, bot):
     weather_data = json.loads(bot.user_get(user_id, 'weather:data'))
+    reply_markup = telegram.InlineKeyboardMarkup(
+        [[telegram.InlineKeyboardButton(BASIC_FORECAST_BUTTON, callback_data='weather-basic'),
+          telegram.InlineKeyboardButton(WEEK_FORECAST_BUTTON, callback_data='weather-week')]]
+    )
     hours = []
-    if only:
-        r = range(0, min(24, len(weather_data['hourly']['data'])))
-    else:
-        r = range(0, min(16, len(weather_data['hourly']['data'])), 3)
-    for i in r:
-        hour_weather = weather_data['hourly']['data'][i]
+    for i in range(0, min(24, len(weather_data['hourly']['data'])), 2):
+        hour = weather_data['hourly']['data'][i]
         hours.append({
-            'time': arrow.get(hour_weather['time']).to(weather_data['timezone']).format('H:00'),
-            'temperature': hour_weather['temperature'],
-            'summary': hour_weather['summary'],
-            'emoji': WEATHER_ICONS.get(hour_weather['icon'], '')
+            'time': arrow.get(hour['time']).to(weather_data['timezone']).format('H:00'),
+            'temperature': ((weather_data['daily']['data'][1]['temperatureMax'] +
+                                  weather_data['daily']['data'][1]['temperatureMin']) / 2),
+            'summary': hour['summary'],
+            'emoji': WEATHER_ICONS.get(hour['icon'], '')
         })
-    if only:
-        hours = [x for x in hours[1:] if only in x['summary'].lower()]
-    reply_markup = None if only else telegram.ReplyKeyboardHide()
-    bot.telegram.send_message(user_id, to_render.render(name=name, hours=hours),
-                              reply_markup=reply_markup,
-                              parse_mode=telegram.ParseMode.MARKDOWN)
+    message = HOURS_MESSAGE.render(
+        hours=hours,
+        temperature_symbol=UNITS_SYMBOLS.get(weather_data['flags']['units'], '°C')
+    )
+    return message, reply_markup
+
+
+def week_forecast_callback(query, bot):
+    week_forecast = build_week_forecast(query.u_id, bot)
+    bot.telegram.editMessageText(
+        text=week_forecast[0],
+        parse_mode=telegram.ParseMode.MARKDOWN,
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
+    )
+    bot.telegram.editMessageReplyMarkup(
+        reply_markup=week_forecast[1],
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        disable_web_page_preview=True
+    )
+
+
+def build_week_forecast(user_id, bot):
+    weather_data = json.loads(bot.user_get(user_id, 'weather:data'))
+    reply_markup = telegram.InlineKeyboardMarkup(
+        [[telegram.InlineKeyboardButton(HOURS_FORECAST_BUTTON, callback_data='weather-hourly'),
+          telegram.InlineKeyboardButton(BASIC_FORECAST_BUTTON, callback_data='weather-basic')]]
+    )
+    days = []
+    for day in weather_data['daily']['data'][1:]:
+        days.append({
+            'time': arrow.get(day['time']).to(weather_data['timezone']),
+            'temperature': ((day['temperatureMax'] + day['temperatureMin']) / 2),
+            'summary': day['summary'],
+            'emoji': WEATHER_ICONS.get(day['icon'], '')
+        })
+    message = WEEK_MESSAGE.render(
+        days=days,
+        temperature_symbol=UNITS_SYMBOLS.get(weather_data['flags']['units'], '°C')
+    )
+    return message, reply_markup
 
 
 def get_weather(lat, lng):
-    response = requests.get(ENDPOINT_URL + '/{},{}'.format(lat, lng))
+    response = requests.get(
+        ENDPOINT_URL + '/{},{}'.format(lat, lng),
+        params={
+            'units': 'auto'
+        }
+    )
     return response.json()
