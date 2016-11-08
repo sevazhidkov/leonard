@@ -38,7 +38,6 @@ def daily_meme_check(bot: Leonard):
         time = local_time(bot, int(user_id))
 
         if time.hour in DAILY_MEME_HOURS:
-            bot.redis.set(key + ':sent', '1', ex=(len(DAILY_MEME_HOURS) + 1) * 60 * 60)
             result.append(int(user_id))
 
     return result
@@ -46,6 +45,8 @@ def daily_meme_check(bot: Leonard):
 
 def daily_meme_send(bot: Leonard, users):
     for u_id in users:
+        key = 'user:{}:notifications:9gag:daily-meme:sent'.format(u_id)
+        bot.redis.set(key, '1', ex=(len(DAILY_MEME_HOURS) + 1) * 60 * 60)
         bot.telegram.send_message(u_id, 'Here is your daily meme, my friend! 😆')
         show_meme(None, bot, u_id)
 

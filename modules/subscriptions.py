@@ -5,16 +5,16 @@ from leonard import Leonard
 from modules import weather
 
 SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'Morning weather 🌅',
-                     'on_add': 'Yay! Next morning I\'ll send your forecast'},
-                    {'plugin': 'weather', 'name': 'rain-notifications', 'text': 'Before rain ☔'}],
-                   [{'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}]]
+                     'on_add': 'Yay! Next morning I\'ll send you forecast 👌'}],
+                   [{'plugin': 'weather', 'name': 'rain-notifications', 'text': 'Before rain ☔'},
+                    {'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}]]
 
 DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
 DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'
 
 INITIAL_WEATHER_OFFER = jinja2.Template("""You shouldn't write me to get help – you can subscribe to some notification messages.
 
-⛅ Maybe weather? Morning forecasts or "Rain in next hour" reports?
+⛅ Maybe weather? Morning forecasts or notifications about rain?
 """)
 WEATHER_SETUP_RESULT = jinja2.Template(
     "👌 Not a problem, {% if result %}I subscribed you. It's ready " +

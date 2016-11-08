@@ -13,6 +13,9 @@ from leonard import Leonard
 from libs.analytics import Tracker
 from modules.location import set_location
 
+from libs.utils import FakeMessage
+from libs.timezone import local_time
+
 DARKSKY_MESSAGE = 'Weather information provided by DarkSky.net'
 WEATHER_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nToday: _{{ today_date.format('MMMM DD, YYYY') }}_\n\n"
                                   "Right now: *{{ temperature }} {{ temperature_symbol }}*, _{{ summary|lower }}_ "
@@ -28,9 +31,9 @@ WEEK_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nWeek weather: 📅\n\n{% for day
                                    "*{{ day.temperature|round(1) }} {{ temperature_symbol }}*, "
                                    "{{ day.summary|lower }} {{ day.emoji }}\n{% endfor %}")
 
-RAIN_SOON = jinja2.Template("☔ ☔ ☔\nThere will be rain soon:\n\n{% for hour in hours %}"
-                            "{{ hour.time }} – *{{ hour.temperature }} ℉*, "
-                            "_{{ hour.summary|lower }}_ {{ hour.emoji }}\n{% endfor %}")
+RAIN_SOON = jinja2.Template("☔ Hey, today will be rain! Don't forget your umbrella! \n\n{% for hour in hours %}"
+                            "_{{ hour.time }}_ – *{{ hour.temperature|round(2) }} {{ hour.symbol }}*, "
+                            "{{ hour.summary|lower }} {{ hour.emoji }}\n{% endfor %}")
 ENDPOINT_URL = 'https://api.darksky.net/forecast/{}'.format(os.environ['DARKSKY_TOKEN'])
 
 BASIC_FORECAST_BUTTON = 'Summary 🌀'
@@ -54,12 +57,21 @@ UNITS_SYMBOLS = {
     'us': '℉'
 }
 
+MORNING_FORECAST_HOURS = [8, 9, 10]
+RAIN_NOTIFICATIONS_HOURS = [7, 8, 9, 18]
+
 
 def register(bot):
     bot.handlers['weather-show'] = show_weather
+
     bot.callback_handlers['weather-basic'] = basic_forecast_callback
     bot.callback_handlers['weather-hourly'] = hour_forecast_callback
     bot.callback_handlers['weather-week'] = week_forecast_callback
+
+    bot.subscriptions.append({'name': 'morning-forecast', 'check': morning_forecast_check,
+                              'send': morning_forecast_send})
+    bot.subscriptions.append({'name': 'rain-notifications', 'check': rain_notifications_check,
+                              'send': rain_notifications_send})
 
 
 def show_weather(message, bot, subscription=False):
@@ -140,8 +152,7 @@ def build_hour_forecast(user_id, bot):
         hour = weather_data['hourly']['data'][i]
         hours.append({
             'time': arrow.get(hour['time']).to(weather_data['timezone']).format('H:00'),
-            'temperature': ((weather_data['daily']['data'][1]['temperatureMax'] +
-                                  weather_data['daily']['data'][1]['temperatureMin']) / 2),
+            'temperature': hour['temperature'],
             'summary': hour['summary'],
             'emoji': WEATHER_ICONS.get(hour['icon'], '')
         })
@@ -188,6 +199,98 @@ def build_week_forecast(user_id, bot):
         temperature_symbol=UNITS_SYMBOLS.get(weather_data['flags']['units'], '°C')
     )
     return message, reply_markup
+
+
+# Morning forecast subscription
+
+
+def morning_forecast_check(bot):
+    result = []
+
+    for key in bot.redis.scan_iter(match='user:*:notifications:weather:morning-forecast'):
+        key = key.decode('utf-8')
+        status = bot.redis.get(key).decode('utf-8')
+        sent = bot.redis.get(key + ':sent')
+        if status != '1' or (sent and sent.decode('utf-8') == '1'):
+            continue
+        _, user_id, _, _, _ = key.split(':')
+
+        time = local_time(bot, int(user_id))
+
+        if time.hour in MORNING_FORECAST_HOURS:
+            result.append(int(user_id))
+
+    return result
+
+
+def morning_forecast_send(bot, users):
+    for u_id in users:
+        bot.telegram.send_message(u_id, 'Good morning, here is your weather forecast for today ❤️')
+        message = FakeMessage()
+        message.u_id = u_id
+        bot.call_handler(message, 'weather-show')
+        key = 'user:{}:notifications:weather:morning-forecast:sent'.format(u_id)
+        bot.redis.set(key, '1', ex=(len(MORNING_FORECAST_HOURS) + 1) * 60 * 60)
+
+
+# Rain notification subscription
+
+
+def rain_notifications_check(bot):
+    result = []
+
+    for key in bot.redis.scan_iter(match='user:*:notifications:weather:rain-notifications'):
+        key = key.decode('utf-8')
+        status = bot.redis.get(key).decode('utf-8')
+        if status != '1':
+            continue
+
+        _, user_id, _, _, _ = key.split(':')
+        time = local_time(bot, int(user_id))
+
+        if time.hour not in RAIN_NOTIFICATIONS_HOURS:
+            continue
+
+        checked = bot.redis.get(key + ':checked')  # Did we already checked for rain in this day
+        if (checked and checked.decode('utf-8') == '1'):
+            continue
+
+        location = json.loads(bot.user_get(int(user_id), 'location'))
+        weather_data = get_weather(location['lat'], location['long'])
+
+        rain_hours = []
+        for hour in weather_data['hourly']['data']:
+            if arrow.get(hour['time']).day != time.day:
+                continue
+
+            if hour['precipProbability'] > 0.5:
+                rain_hours.append({
+                    'time': arrow.get(hour['time']).to(weather_data['timezone']).format('H:00'),
+                    'temperature': hour['temperature'],
+                    'summary': hour['summary'],
+                    'emoji': WEATHER_ICONS.get(hour['icon'], ''),
+                    'symbol': UNITS_SYMBOLS.get(weather_data['flags']['units'], '°C')
+                })
+
+        if rain_hours:
+            bot.user_set(int(user_id), 'weather:rain_hours', json.dumps(rain_hours))
+            result.append(int(user_id))
+        bot.redis.set(key + ':checked', '1', ex=(len(RAIN_NOTIFICATIONS_HOURS) + 1) * 60 * 60)
+
+    return result
+
+
+def rain_notifications_send(bot, users):
+    reply_markup = telegram.InlineKeyboardMarkup(
+        [[telegram.InlineKeyboardButton(BASIC_FORECAST_BUTTON, callback_data='weather-basic'),
+          telegram.InlineKeyboardButton(HOURS_FORECAST_BUTTON, callback_data='weather-hourly')]]
+    )
+    for u_id in users:
+        rain_hours = json.loads(bot.user_get(u_id, 'weather:rain_hours'))
+        bot.telegram.send_message(
+            u_id, RAIN_SOON.render(hours=rain_hours),
+            reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN
+        )
 
 
 def get_weather(lat, lng):
