@@ -20,3 +20,5 @@ lxml
 Pillow
 
 wolframalpha
+
+bugsnag
