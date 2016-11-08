@@ -3,9 +3,6 @@ import logging
 import importlib
 from threading import Thread
 
-import boto3
-import collections
-
 import bugsnag
 import falcon
 from bugsnag.handlers import BugsnagHandler
@@ -43,12 +40,14 @@ class Leonard:
         self.bytes_fields = []
 
         self.logger = logger
+        self.logger.addHandler(BugsnagHandler())
 
         self.subscriptions = []
 
         bugsnag.configure(
             api_key=os.environ['BUGSNAG_API_KEY'],
             project_root=os.getcwd(),
+            notify_release_stages=[os.environ.get('BUGSNAG_RELEASE_STAGE', 'production')]
         )
 
     def collect_plugins(self):
