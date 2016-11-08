@@ -62,6 +62,11 @@ def show_meme(message, bot: Leonard, user_id=None):
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
     )
 
+    if bot.debug:
+        file_id = False
+    else:
+        file_id = str(max(photos['photo'], key=lambda x: x['width'])['file_id'])
+
     bot.nine_gag.update_item(
         Key={
             'postId': post_id
@@ -69,7 +74,7 @@ def show_meme(message, bot: Leonard, user_id=None):
         UpdateExpression="ADD viewed :user_id SET file_id = :file_id",
         ExpressionAttributeValues={
             ':user_id': {int(user_id)},
-            ':file_id': str(max(photos['photo'], key=lambda x: x['width'])['file_id'])
+            ':file_id': file_id
         }
     )
 

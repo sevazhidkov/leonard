@@ -24,6 +24,7 @@ def welcome_message(message, bot):
         chat_id=message.u_id,
         text=WELCOME_MESSSAGE_TEMPLATE.render(first_name=message.from_user.first_name)
     )
+    message.handler = 'registration-started'
     bot.call_handler(message, 'subscriptions-setup')
 
 
@@ -31,4 +32,5 @@ def welcome_setup_result(message, bot):
     bot.user_set(message.u_id, 'registered', '1')
     bot.telegram.send_message(message.u_id, WELCOME_SETUP_RESULT)
     bot.telegram.send_message(message.u_id, CONTACT_WITH)
+    message.handler = 'registration-finished'
     bot.call_handler(message, 'main-menu')

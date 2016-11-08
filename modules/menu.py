@@ -4,11 +4,13 @@ import telegram
 MENU = [[('handler', 'Places ☕', 'foursquare-location-choice'),
          ('handler', 'Weather 🌤', 'weather-show'),
          ('handler', 'News 📰', 'news-get-entry')],
-        [('handler', 'Vinci filters 🌇', 'vinci-upload-image'),
-         ('handler', 'Get Uber 🚘', 'uber-choose-location')],
+        [('handler', 'Vinci 🌇', 'vinci-upload-image'),
+         ('handler', 'Get Uber 🚘', 'uber-choose-location'),
+         ('handler', 'Wolfram 📊', 'wolfram-ask')],
+        [('handler', '9GAG 😅', 'meme-show'),
+        ('handler', 'Product Hunt 💻', 'producthunt-get-entry')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
-         ('handler', '9GAG 😅', 'meme-show')],
-        [('handler', 'Product Hunt 💻', 'producthunt-get-entry')]]
+         ('handler', 'Settings 🔧', 'settings-show')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',
@@ -31,6 +33,7 @@ def main_menu(message, bot):
         for line in MENU:
             for row in line:
                 if row[0] == 'handler' and row[1] == message.text:
+                    message.handler = row[2]
                     return bot.call_handler(message, row[2])
 
     keyboard = get_keyboard()
