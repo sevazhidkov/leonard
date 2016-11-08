@@ -20,7 +20,7 @@ DARKSKY_MESSAGE = 'Weather information provided by DarkSky.net'
 WEATHER_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nToday: _{{ today_date.format('MMMM DD, YYYY') }}_\n\n"
                                   "Right now: *{{ temperature }} {{ temperature_symbol }}*, _{{ summary|lower }}_ "
                                   "{{ emoji }}\n{{ day_summary }}\n\nTomorrow: "
-                                  "*{{ tomorrow_temperature }} {{ temperature_symbol }}*, "
+                                  "*{{ tomorrow_temperature|round(1) }} {{ temperature_symbol }}*, "
                                   "_{{ tomorrow_summary|lower }}_ {{ tomorrow_emoji }}"
                                   "\n\n[Powered by Dark Sky](https://darksky.net/poweredby/)")
 HOURS_MESSAGE = jinja2.Template("⛅ ☁️ ☔\nHourly forecast: 🕘\n\n{% for hour in hours %}"
