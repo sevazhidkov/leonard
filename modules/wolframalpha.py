@@ -23,7 +23,8 @@ def ask_wolfram(message, bot: Leonard):
 
 
 def wolfram_result(message, bot: Leonard):
-    bot.telegram.send_message(message.u_id, 'Wolfram Alpha is thinking... ⌛️')
+    bot.telegram.send_message(message.u_id, 'Wolfram Alpha is thinking... ⌛️',
+                              reply_markup=bot.get_menu(message))
     response = bot.wolfram_client.query(message.text)
     url = 'https://www.wolframalpha.com/input/?i=' + quote_plus(message.text)
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Open on WolphramAlpha.com', url=url)]])
@@ -42,4 +43,3 @@ def wolfram_result(message, bot: Leonard):
                                 reply_markup=reply_markup)
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
-    bot.call_handler(message, 'main-menu')
