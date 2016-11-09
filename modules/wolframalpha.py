@@ -31,15 +31,18 @@ def wolfram_result(message, bot: Leonard):
     res = [pod for pod in response.pods if
            pod.title.lower() in ('result', 'response', 'description', 'root', 'solution')]
     if len(res) > 0 and not any(v is None for v in res):
-        if res[0].text is not None:
+        if hasattr(res[0], 'text') and res[0].text is not None:
             bot.telegram.send_message(message.u_id, '\n'.join(list(map(lambda x: x.text, res))),
                                       reply_markup=reply_markup)
-        elif res[0].img is not None:
+        elif hasattr(res[0], 'img') and res[0].img is not None:
             bot.telegram.send_photo(message.u_id, photo=res[0].img, reply_markup=reply_markup)
         else:
             bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
     elif any('plot' in x.title.lower() for x in response.pods):
-        bot.telegram.send_photo(message.u_id, photo=[x for x in response.pods if 'plot' in x.title.lower()][0].img,
-                                reply_markup=reply_markup)
+        plot = [x for x in response.pods if 'plot' in x.title.lower()]
+        if plot and hasattr(plot[0], 'img'):
+            bot.telegram.send_photo(message.u_id, photo=plot[0].img, reply_markup=reply_markup)
+        else:
+            bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
