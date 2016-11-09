@@ -57,10 +57,10 @@ def last_entry(query, bot):
     edit_current_entry(news[next_entry], query, next_entry, bot)
 
 
-def get_news(bot):
+def get_news(bot, use_cache=True):
     news = bot.redis.get("news:cache")
 
-    if news is None:
+    if news is None or not use_cache:
         news = requests.get(
             NEWS_API_URL,
             params={'source': NEWS_SOURCE, 'apiKey': NEWS_API_TOKEN}

@@ -10,5 +10,5 @@ telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
 bot = Leonard(telegram_client)
 bot.collect_plugins()
 
-get_news(bot)
-get_products(bot)
+get_news(bot, use_cache=False)
+get_products(bot, use_cache=False)

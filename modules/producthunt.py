@@ -66,9 +66,9 @@ def previous_entry(query, bot):
     edit_current_entry(products[next_entry], query, next_entry, len(products), bot)
 
 
-def get_products(bot):
+def get_products(bot, use_cache=True):
     products = bot.redis.get("producthunt:cache")
-    if products:
+    if products and use_cache:
         products = json.loads(products.decode())
         return products
 
