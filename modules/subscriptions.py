@@ -2,14 +2,15 @@ import telegram
 import jinja2
 
 from leonard import Leonard
-from modules import weather
 
 SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'Morning weather 🌅',
                      'on_add': 'Yay! Next morning I\'ll send you forecast 👌'}],
                    [{'plugin': 'weather', 'name': 'rain-notifications', 'text': 'Before rain ☔'},
                     {'plugin': '9gag', 'name': 'daily-meme', 'text': 'Daily meme 😅'}],
                    [{'plugin': 'news', 'name': 'news-digest', 'text': 'News digest 📰',
-                    'on_add': 'Cool! I will send you news next evening 👌'}]]
+                    'on_add': 'Cool! I will send you news next evening 👌'},
+                    {'plugin': 'producthunt', 'name': 'daily-hunt', 'text': 'Product Hunt 🔥',
+                     'on_add': 'Cool! I will send you news next evening 👌'}]]
 
 DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
 DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'
@@ -48,7 +49,7 @@ def subscriptions_setup(message, bot: Leonard):
 
 
 def subscriptions_setup_result(message, bot: Leonard):
-    base_key = 'notifications:{}:{}'.format(weather.NAME, '{}')
+    base_key = 'notifications:weather:{}'
     if '🌄' in message.text:
         key = base_key.format('morning-forecast')
     elif '☔️' in message.text:

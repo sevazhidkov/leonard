@@ -8,8 +8,12 @@ import redis
 import telegram
 
 from libs.googleapis import shorten_url
+from libs.timezone import local_time
+from libs.utils import FakeMessage
 
-PRODUCT_MESSAGE = jinja2.Template("*{{ product.name }}*\n\n{{ product.tagline }}\n\n{{ product.discussion_url }}")
+PRODUCT_MESSAGE = jinja2.Template("*{{ product.name }}* _+{{ product.votes_count }} 🔥_\n\n"
+                                  "{{ product.tagline }}\n\n{{ product.discussion_url }}")
+DAILY_HUNT_HOURS = [13, 14, 15]
 
 LOGIN_URL = 'https://api.producthunt.com/v1/oauth/token'
 POSTS_URL = 'https://api.producthunt.com/v1/posts'
@@ -30,6 +34,9 @@ def register(bot):
 
     bot.callback_handlers["producthunt-next-entry"] = next_entry
     bot.callback_handlers["producthunt-previous-entry"] = previous_entry
+
+    bot.subscriptions.append({'name': 'daily-hunt', 'check': daily_hunt_check,
+                              'send': daily_hunt_send})
 
 
 def send_products(message, bot):
@@ -111,6 +118,37 @@ def build_result_keyboard(cur_page, product, products_num):
         keyboard[0].append(next_button)
 
     return telegram.InlineKeyboardMarkup(keyboard)
+
+
+# Product Hunt subscriptions
+
+
+def daily_hunt_check(bot):
+    result = []
+    for key in bot.redis.scan_iter(match='user:*:notifications:producthunt:daily-hunt'):
+        key = key.decode('utf-8')
+        status = bot.redis.get(key).decode('utf-8')
+        sent = bot.redis.get(key + ':sent')
+        if status != '1' or (sent and sent.decode('utf-8') == '1'):
+            continue
+        _, user_id, _, _, _ = key.split(':')
+
+        time = local_time(bot, int(user_id))
+
+        if time.hour in DAILY_HUNT_HOURS:
+            result.append(int(user_id))
+
+    return result
+
+
+def daily_hunt_send(bot, users):
+    for u_id in users:
+        key = 'user:{}:notifications:producthunt:daily-hunt:sent'.format(u_id)
+        bot.redis.set(key, '1', ex=(len(DAILY_HUNT_HOURS) + 1) * 60 * 60)
+        bot.telegram.send_message(u_id, 'Hey! That\'s your Product Hunt digest ☕')
+        m = FakeMessage()
+        m.u_id = u_id
+        send_products(m, bot)
 
 
 def espace_markdown_symbols(text):

@@ -95,8 +95,6 @@ class Leonard:
 
             self.user_set(message.u_id, 'handler', self.default_handler)
 
-            bugsnag.notify(error)
-
             return
 
         Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
