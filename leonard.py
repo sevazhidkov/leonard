@@ -115,8 +115,6 @@ class Leonard:
 
             self.user_set(query.message.u_id, 'handler', self.default_handler)
 
-            bugsnag.notify(error)
-
             return
 
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
