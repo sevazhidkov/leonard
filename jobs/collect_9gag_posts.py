@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 import boto3
 from PIL import Image
 import requests
-from io import BytesIO
 
 NINEGAG_RSS_URL = 'http://www.15minutesoffame.be/9gag/rss/9GAG_-_Trending.atom'
 
@@ -20,8 +19,8 @@ if __name__ == '__main__':
             continue
         img = img['src']
 
-        response = requests.get(img)
-        width, height = Image.open(BytesIO(response.content)).size
+        response = requests.get(img, stream=True)
+        width, height = Image.open(response.raw).size
         if height/width >= 3:
             continue
         table.put_item(
