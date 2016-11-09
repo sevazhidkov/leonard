@@ -51,7 +51,7 @@ PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
 class UberRedirectResource:
     def on_get(self, req, resp):
-        code = request.params.get('code')
+        code = req.get_param('code')
         access_data = requests.post(TOKEN_URL, data={
             'client_secret': CLIENT_SECRET,
             'client_id': CLIENT_ID,
@@ -254,13 +254,13 @@ def oauth_start(message, bot):
 
 
 def refresh_token(bot, u_id):
-    response = requests.post(TOKEN_URL, {
+    access_data = requests.post(TOKEN_URL, {
         'client_secret': CLIENT_SECRET,
         'client_id': CLIENT_ID,
         'grant_type': 'refresh_token',
         'redirect_uri': REDIRECT_URL,
         'refresh_token': bot.redis.user_get(u_id, 'uber:refresh_token')
-    })
+    }).json()
     bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
     bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
     return access_data['access_token']
