@@ -54,7 +54,7 @@ def daily_meme_send(bot: Leonard, users):
 def show_meme(message, bot: Leonard, user_id=None):
     if message:
         user_id = message.u_id
-    title, img, post_id = get_meme(bot, user_id)
+    meme, title, img, post_id = get_meme(bot, user_id)
     photos = bot.telegram.send_photo(
         user_id,
         photo=img,
@@ -63,7 +63,7 @@ def show_meme(message, bot: Leonard, user_id=None):
     )
 
     if bot.debug:
-        file_id = False
+        file_id = False if 'file_id' not in meme or not meme['file_id'] else meme['file_id']
     else:
         file_id = str(max(photos['photo'], key=lambda x: x['width'])['file_id'])
 
@@ -83,6 +83,6 @@ def get_meme(bot: Leonard, user_id):
     meme = choice(bot.nine_gag.scan(
         FilterExpression=~Attr('viewed').contains(user_id)
     )['Items'])
-    return meme['title'], \
+    return meme, meme['title'], \
            meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
            meme['postId']
