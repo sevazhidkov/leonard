@@ -248,11 +248,11 @@ def rain_notifications_check(bot):
         _, user_id, _, _, _ = key.split(':')
         time = local_time(bot, int(user_id))
 
-        if time.hour not in RAIN_NOTIFICATIONS_HOURS:
+        if not time or time.hour not in RAIN_NOTIFICATIONS_HOURS:
             continue
 
         checked = bot.redis.get(key + ':checked')  # Did we already checked for rain in this day
-        if (checked and checked.decode('utf-8') == '1'):
+        if checked and checked.decode('utf-8') == '1':
             continue
 
         location = json.loads(bot.user_get(int(user_id), 'location'))
