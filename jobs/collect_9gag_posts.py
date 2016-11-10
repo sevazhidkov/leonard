@@ -5,10 +5,12 @@ from bs4 import BeautifulSoup
 import boto3
 from PIL import Image
 import requests
+import logging
 
 NINEGAG_RSS_URL = 'http://www.15minutesoffame.be/9gag/rss/9GAG_-_Trending.atom'
 
-if __name__ == '__main__':
+
+def main():
     feed = feedparser.parse(NINEGAG_RSS_URL)['items']
     table = boto3.resource('dynamodb', 'eu-west-1').Table('LeonardBot9gagPosts')
     for item in feed:
@@ -21,7 +23,7 @@ if __name__ == '__main__':
 
         response = requests.get(img, stream=True)
         width, height = Image.open(response.raw).size
-        if height/width >= 3:
+        if height / width >= 3:
             continue
         table.put_item(
             Item={
@@ -33,3 +35,10 @@ if __name__ == '__main__':
                 'file_id': False
             }
         )
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)

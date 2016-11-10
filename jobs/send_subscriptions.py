@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -9,6 +10,14 @@ telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
 bot = Leonard(telegram_client)
 bot.collect_plugins()
 
-if __name__ == '__main__':
+
+def main():
     for subscription in bot.subscriptions:
         subscription['send'](bot, subscription['check'](bot))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)

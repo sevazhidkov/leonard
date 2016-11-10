@@ -1,3 +1,4 @@
+import logging
 import os
 
 import telegram
@@ -10,5 +11,14 @@ telegram_client = telegram.Bot(os.environ['BOT_TOKEN'])
 bot = Leonard(telegram_client)
 bot.collect_plugins()
 
-get_news(bot, use_cache=False)
-get_products(bot, use_cache=False)
+
+def main():
+    get_news(bot, use_cache=False)
+    get_products(bot, use_cache=False)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)
