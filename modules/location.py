@@ -1,5 +1,6 @@
 import os
 import json
+import telegram
 from mapbox import Geocoder
 
 from libs.googleapis import get_timezone
@@ -62,7 +63,12 @@ def reverse_geocode(lat, long, bot=None):
 
 def welcome_location_setup(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'location-setup-result')
-    bot.telegram.send_message(message.u_id, WELCOME_LOCATION_SETUP)
+    bot.telegram.send_message(
+        message.u_id, WELCOME_LOCATION_SETUP,
+        reply_markup=telegram.ReplyKeyboardMarkup(
+            [[telegram.KeyboardButton('📍 Send current location', request_location=True)]]
+        )
+    )
     bot.telegram.send_message(message.u_id, HOW_TO_SEND_LOCATION)
 
 
