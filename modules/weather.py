@@ -217,7 +217,7 @@ def morning_forecast_check(bot):
 
         time = local_time(bot, int(user_id))
 
-        if time.hour in MORNING_FORECAST_HOURS:
+        if time and time.hour in MORNING_FORECAST_HOURS:
             result.append(int(user_id))
 
     return result
