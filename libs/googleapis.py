@@ -18,5 +18,5 @@ def shorten_url(url):
         'https://www.googleapis.com/urlshortener/v1/url?key={}'.format(os.environ['GOOGLE_API_TOKEN']),
         data=json.dumps({'longUrl': url}), headers={'Content-Type': 'application/json'}
     ).json()
-    print('Google Shortener response:', response)
+    print('Google Shortener url:', url, '; response:', response)
     return response['id']
