@@ -23,7 +23,7 @@ def main():
 
         response = requests.get(img, stream=True)
         width, height = Image.open(response.raw).size
-        if height / width >= 3:
+        if height / width >= 2:
             continue
         table.put_item(
             Item={
