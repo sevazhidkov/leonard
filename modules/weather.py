@@ -225,7 +225,7 @@ def morning_forecast_check(bot):
 
 def morning_forecast_send(bot, users):
     for u_id in users:
-        bot.telegram.send_message(u_id, 'Good morning, here is your weather forecast for today ❤️')
+        bot.telegram.send_message(u_id, 'Good morning, here is today weather forecast for you ❤️')
         message = FakeMessage()
         message.u_id = u_id
         bot.call_handler(message, 'weather-show')
