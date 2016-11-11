@@ -33,7 +33,7 @@ def wolfram_result(message, bot: Leonard):
     url = 'https://www.wolframalpha.com/input/?i=' + quote_plus(message.text)
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Open on WolphramAlpha.com', url=url)]])
     res = [pod for pod in response.pods if
-           pod.title.lower() in ('result', 'response', 'description', 'root', 'solution')]
+           pod.id.lower() in ('result', 'response', 'description', 'root', 'solution')]
     if len(res) > 0 and not any(v is None for v in res):
         if hasattr(res[0], 'text') and res[0].text is not None:
             bot.telegram.send_message(message.u_id, '\n'.join(list(map(lambda x: x.text, res))),
@@ -42,8 +42,8 @@ def wolfram_result(message, bot: Leonard):
             bot.telegram.send_photo(message.u_id, photo=res[0].img, reply_markup=reply_markup)
         else:
             bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
-    elif any('plot' in x.title.lower() for x in response.pods):
-        plot = [x for x in response.pods if 'plot' in x.title.lower()]
+    elif any('plot' in x.id.lower() for x in response.pods):
+        plot = [x for x in response.pods if 'plot' in x.id.lower()]
         if plot and hasattr(plot[0], 'img'):
             bot.telegram.send_photo(message.u_id, photo=plot[0].img, reply_markup=reply_markup)
         else:
