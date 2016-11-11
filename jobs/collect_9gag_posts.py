@@ -21,10 +21,11 @@ def main():
         if not hasattr(img, 'src'):
             continue
         img = img['src']
-
-        inp = BytesIO(requests.get(img).content)
-        inp.seek(0)
-        width, height = Image.open(inp).size
+        try:
+            inp = BytesIO(requests.get(img).content)
+            width, height = Image.open(inp).size
+        except Exception:
+            continue
         if height / width >= 2:
             continue
         table.put_item(
