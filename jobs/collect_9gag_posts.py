@@ -4,6 +4,7 @@ import feedparser
 from bs4 import BeautifulSoup
 import boto3
 from PIL import Image
+from io import BytesIO
 import requests
 import logging
 
@@ -21,8 +22,9 @@ def main():
             continue
         img = img['src']
 
-        response = requests.get(img, stream=True)
-        width, height = Image.open(response.raw).size
+        inp = BytesIO(requests.get(img).content)
+        inp.seek(0)
+        width, height = Image.open(inp).size
         if height / width >= 2:
             continue
         table.put_item(
