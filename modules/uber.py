@@ -259,7 +259,7 @@ def refresh_token(bot, u_id):
         'client_id': CLIENT_ID,
         'grant_type': 'refresh_token',
         'redirect_uri': REDIRECT_URL,
-        'refresh_token': bot.redis.user_get(u_id, 'uber:refresh_token')
+        'refresh_token': bot.user_get(u_id, 'uber:refresh_token')
     }).json()
     bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
     bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
