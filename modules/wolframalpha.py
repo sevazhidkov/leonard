@@ -32,22 +32,26 @@ def wolfram_result(message, bot: Leonard):
     bot.logger.info('Wolfram Alpha response: "{}" for query "{}"'.format(response, message.text))
     url = 'https://www.wolframalpha.com/input/?i=' + quote_plus(message.text)
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Open on WolphramAlpha.com', url=url)]])
-    res = [pod for pod in response.pods if
-           pod.id.lower() in ('result', 'response', 'description', 'root', 'solution')]
-    if len(res) > 0 and not any(v is None for v in res):
+    res = list(response.results)
+    exists = len(res) > 0
+    if any('plot' in x.id.lower() for x in response.pods):
+        plot = [x for x in response.pods if 'plot' in x.id.lower()]
+        if not hasattr(plot[0], 'img') and hasattr(plot[0], 'subpod') and 'plot' in plot[0].title.lower():
+            plot = list(plot[0].subpods)
+        if plot and hasattr(plot[0], 'img'):
+            bot.telegram.send_photo(
+                message.u_id,
+                photo=next(plot[0].img).src,
+                reply_markup=reply_markup if not exists else None
+            )
+        else:
+            bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup if not exists else None)
+    if exists:
         if hasattr(res[0], 'text') and res[0].text is not None:
             bot.telegram.send_message(message.u_id, '\n'.join(list(map(lambda x: x.text, res))),
                                       reply_markup=reply_markup)
         elif hasattr(res[0], 'img') and res[0].img is not None:
             bot.telegram.send_photo(message.u_id, photo=res[0].img, reply_markup=reply_markup)
-        else:
-            bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
-    elif any('plot' in x.id.lower() for x in response.pods):
-        plot = [x for x in response.pods if 'plot' in x.id.lower()]
-        if not plot:
-            plot = [x for x in response.subpod if 'plot' in x.id.lower()]
-        if plot and hasattr(plot[0], 'img'):
-            bot.telegram.send_photo(message.u_id, photo=plot[0].img, reply_markup=reply_markup)
         else:
             bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
     else:
