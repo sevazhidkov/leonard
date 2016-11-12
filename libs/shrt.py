@@ -24,6 +24,7 @@ class GetLinkResource:
             resp.set_cookie('user', user_hash.decode('utf-8'), max_age=60 * 60 * 24)
         resp.status = falcon.HTTP_301
         resp.location = full_link.decode('utf-8')
+        print(resp.headers)
 
 
 def short_user_link(u_id, link, code_size=11):
