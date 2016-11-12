@@ -44,6 +44,8 @@ def wolfram_result(message, bot: Leonard):
             bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
     elif any('plot' in x.id.lower() for x in response.pods):
         plot = [x for x in response.pods if 'plot' in x.id.lower()]
+        if not plot:
+            plot = [x for x in response.subpod if 'plot' in x.id.lower()]
         if plot and hasattr(plot[0], 'img'):
             bot.telegram.send_photo(message.u_id, photo=plot[0].img, reply_markup=reply_markup)
         else:
