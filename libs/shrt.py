@@ -22,7 +22,7 @@ class GetLinkResource:
         print('Uber user hash:', user_hash)
         if user_hash:
             resp.set_cookie('user', user_hash.decode('utf-8'))
-        resp.status = falcon.HTTP_201
+        resp.status = falcon.HTTP_301
         resp.location = full_link.decode('utf-8')
 
 
