@@ -21,7 +21,8 @@ class GetLinkResource:
         user_hash = redis_client.get(base_key + 'user')
         if user_hash:
             resp.set_cookie('user', user_hash.decode('utf-8'))
-        raise falcon.HTTPMovedPermanently(full_link.decode('utf-8'))
+        resp.status = falcon.HTTP_301
+        resp.set_header('Location', full_link.decode('utf-8'))
 
 
 def short_user_link(u_id, link, code_size=11):
