@@ -19,4 +19,6 @@ def shorten_url(url):
         data=json.dumps({'longUrl': url}), headers={'Content-Type': 'application/json'}
     ).json()
     print('Google Shortener url:', url, '; response:', response)
-    return response['id']
+    if 'id' in response:
+        return response['id']
+    return url
