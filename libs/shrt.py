@@ -21,7 +21,7 @@ class GetLinkResource:
         user_hash = redis_client.get(base_key + 'user')
         print('Uber user hash:', user_hash)
         if user_hash:
-            resp.set_cookie('user', user_hash.decode('utf-8'), http_only=False)
+            resp.set_cookie('user', user_hash.decode('utf-8'), secure=False)
         resp.status = falcon.HTTP_301
         resp.location = full_link.decode('utf-8')
 
