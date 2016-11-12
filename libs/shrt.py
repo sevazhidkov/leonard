@@ -19,10 +19,11 @@ class GetLinkResource:
             raise falcon.HTTPMovedPermanently('http://sheldon.ai/')
         redis_client.incr(base_key + 'visits')
         user_hash = redis_client.get(base_key + 'user')
+        print('Uber user hash:', user_hash)
         if user_hash:
             resp.set_cookie('user', user_hash.decode('utf-8'))
-        resp.status = falcon.HTTP_301
-        resp.set_header('Location', full_link.decode('utf-8'))
+        resp.status = falcon.HTTP_201
+        resp.location = full_link.decode('utf-8')
 
 
 def short_user_link(u_id, link, code_size=11):
