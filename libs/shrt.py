@@ -26,6 +26,7 @@ class GetLinkResource:
             resp.set_header('Set-Cookie', 'user={}'.format(user_hash.decode('utf-8')))
             # resp.set_cookie('user', user_hash.decode('utf-8'), max_age=60 * 60 * 24)
         resp.set_header('Location', full_link.decode('utf-8'))
+        print(resp._headers)
 
 
 def short_user_link(u_id, link, code_size=11):
