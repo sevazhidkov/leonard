@@ -20,7 +20,7 @@ class GetLinkResource:
         redis_client.incr(base_key + 'visits')
         user_hash = redis_client.get(base_key + 'user')
         print('Uber user hash:', user_hash)
-        resp.status = falcon.HTTP_301
+        resp.status = falcon.HTTP_307
         if user_hash:
             resp.set_header('Set-Cookie', 'user={}'.format(user_hash.decode('utf-8')))
             # resp.set_cookie('user', user_hash.decode('utf-8'), max_age=60 * 60 * 24)
