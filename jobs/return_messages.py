@@ -4,6 +4,7 @@ import logging
 
 import arrow
 import telegram
+from telegram.error import Unauthorized
 
 from leonard import Leonard
 from libs.timezone import local_time
@@ -41,6 +42,7 @@ def main():
         ))
 
         result = random.choice(([0] * round(interaction_delta.days / 2) + [0]) + [1, 1])
+        bot.user_set(u_id, 'return_sent', time.timestamp, ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
         if result != 1:
             continue
 
@@ -49,6 +51,8 @@ def main():
 
         try:
             bot.call_handler(m, 'main-menu')
+        except Unauthorized:
+            bot.logger.warning('Unauthorized for {}'.format(u_id))
         except Exception as error:
             bot.logger.error(error)
 
