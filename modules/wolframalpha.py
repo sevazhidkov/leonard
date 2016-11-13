@@ -44,8 +44,6 @@ def wolfram_result(message, bot: Leonard):
                 photo=next(plot[0].img).src,
                 reply_markup=reply_markup if not exists else None
             )
-        else:
-            bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup if not exists else None)
     if exists:
         if hasattr(res[0], 'text') and res[0].text is not None:
             bot.telegram.send_message(message.u_id, '\n'.join(list(map(lambda x: x.text, res))),
