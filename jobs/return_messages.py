@@ -44,7 +44,6 @@ def main():
         if result != 1:
             continue
 
-        bot.user_set(u_id, 'return_sent', time.timestamp, ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
         m = FakeMessage()
         m.u_id = u_id
 
