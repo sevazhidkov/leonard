@@ -91,21 +91,22 @@ def send_to_amplitude(bot, message):
 
 
 def track_message(bot, message, handler, tracker=None):
-    dynamodb.put_item(
-        TableName='LeonardBotUserMessage',
-        Item=prepare_to_dynamo({
-            'id': message.message_id,
-            'time': time.mktime(message.date.timetuple()),
-            'proceed_time': time.time(),
-            'text': message.text,
-            'user_id': message.from_user.id,
-            'handler': handler
-        })
-    )
+    if not bot.debug:
+        dynamodb.put_item(
+            TableName='LeonardBotUserMessage',
+            Item=prepare_to_dynamo({
+                'id': message.message_id,
+                'time': time.mktime(message.date.timetuple()),
+                'proceed_time': time.time(),
+                'text': message.text,
+                'user_id': message.from_user.id,
+                'handler': handler
+            })
+        )
 
-    if tracker:
-        tracker.send()
-    send_to_amplitude(bot, message)
+        if tracker:
+            tracker.send()
+        send_to_amplitude(bot, message)
 
 
 def prepare_to_dynamo(item):
