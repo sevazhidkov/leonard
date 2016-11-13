@@ -34,23 +34,28 @@ def wolfram_result(message, bot: Leonard):
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Open on WolphramAlpha.com', url=url)]])
     res = list(response.results)
     exists = len(res) > 0
+    if not exists:
+        res = [x for x in response.pods if any(sub in x.title.lower() for sub in ('solution', 'root'))]
+        exists = len(res) > 0
+    plots = False
     if any('plot' in x.id.lower() for x in response.pods):
         plot = [x for x in response.pods if 'plot' in x.id.lower()]
         if not hasattr(plot[0], 'img') and hasattr(plot[0], 'subpod') and 'plot' in plot[0].title.lower():
             plot = list(plot[0].subpods)
         if plot and hasattr(plot[0], 'img'):
+            plots = True
             bot.telegram.send_photo(
                 message.u_id,
                 photo=next(plot[0].img).src,
                 reply_markup=reply_markup if not exists else None
             )
     if exists:
-        if hasattr(res[0], 'text') and res[0].text is not None:
+        if hasattr(res[0], 'img') and res[0].img is not None:
+            bot.telegram.send_photo(message.u_id, photo=res[0].img, reply_markup=reply_markup)
+        elif hasattr(res[0], 'text') and res[0].text is not None:
             bot.telegram.send_message(message.u_id, '\n'.join(list(map(lambda x: x.text, res))),
                                       reply_markup=reply_markup)
-        elif hasattr(res[0], 'img') and res[0].img is not None:
-            bot.telegram.send_photo(message.u_id, photo=res[0].img, reply_markup=reply_markup)
         else:
             bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
-    else:
+    elif not plots:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND, reply_markup=reply_markup)
