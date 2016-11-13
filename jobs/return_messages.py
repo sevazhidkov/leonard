@@ -27,7 +27,7 @@ def main():
         if time.hour not in RETURN_MESSAGE_HOURS:
             continue
 
-        if bot.user_get(u_id, 'return_sent') == '1':
+        if bot.user_get(u_id, 'return_sent'):
             continue
 
         last_interaction = arrow.get(bot.user_get(u_id, 'last_interaction') or time)
@@ -44,7 +44,7 @@ def main():
         if result != 1:
             continue
 
-        bot.user_set(u_id, 'return_sent', '1', ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
+        bot.user_set(u_id, 'return_sent', time.timestamp, ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
         m = FakeMessage()
         m.u_id = u_id
         bot.call_handler(m, 'main-menu')
