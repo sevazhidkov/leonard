@@ -18,6 +18,7 @@ from modules.menu import get_keyboard
 from libs.analytics import track_message
 
 logger = logging.getLogger('leonard')
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 class Leonard:
