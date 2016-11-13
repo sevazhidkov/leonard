@@ -47,11 +47,15 @@ def main():
         bot.user_set(u_id, 'return_sent', time.timestamp, ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
         m = FakeMessage()
         m.u_id = u_id
-        bot.call_handler(m, 'main-menu')
+
+        try:
+            bot.call_handler(m, 'main-menu')
+        except Exception as error:
+            bot.logger.error(error)
 
 
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        logging.error(e)
+        bot.logger.error(e)
