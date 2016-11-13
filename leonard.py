@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 import importlib
 from threading import Thread
@@ -41,6 +42,7 @@ class Leonard:
 
         self.logger = logger
         self.logger.addHandler(BugsnagHandler())
+        self.logger.setLevel(logging.INFO)
 
         self.subscriptions = []
 
@@ -97,6 +99,8 @@ class Leonard:
 
             return
 
+        self.user_set(message.u_id, 'last_interaction', time.time())
+
         Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
 
     def process_callback_query(self, query):
@@ -118,6 +122,8 @@ class Leonard:
             return
 
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
+
+        self.user_set(query.u_id, 'last_interaction', time.time())
 
         if tracker:
             tracker.send()
