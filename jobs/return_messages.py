@@ -33,8 +33,8 @@ def main():
         last_interaction = arrow.get(bot.user_get(u_id, 'last_interaction') or time)
         interaction_delta = time - last_interaction
 
-        # if interaction_delta and last_interaction.replace(hours=+1) > time:
-            # continue
+        if interaction_delta and last_interaction.replace(hours=+1) > time:
+            continue
 
         bot.logger.info('Checking return message to: {}, where list: {}'.format(
             u_id, ([0] * round(interaction_delta.days / 2) + [0]) + [1, 1]
