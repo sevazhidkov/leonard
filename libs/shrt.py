@@ -23,9 +23,9 @@ class GetLinkResource:
         resp.status = '301 Moved Permanently'
         if user_hash:
             print('setting cookie in uber')
-            resp.set_header('Set-Cookie', 'user={}'.format(user_hash.decode('utf-8')))
-            # resp.set_cookie('user', user_hash.decode('utf-8'), max_age=60 * 60 * 24)
-        resp.set_header('Location', full_link.decode('utf-8'))
+            resp.set_cookie('user', user_hash.decode('utf-8'), max_age=60 * 60 * 24,
+                            domain=os.environ['WEBHOOK_HOSTNAME'].strip('https://'))
+        resp.append_header('Location', full_link.decode('utf-8'))
         print(resp._headers)
 
 
