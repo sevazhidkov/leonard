@@ -3,7 +3,8 @@ import json
 import jinja2
 import requests
 import telegram
-import falcon
+import tornado.web
+from bugsnag.tornado import BugsnagRequestHandler
 
 from libs.shrt import short_user_link
 from libs.utils import build_bot, FakeMessage
@@ -24,13 +25,14 @@ ORDER_ERROR = "Unfortunally I can't process this order 😒\n\nUber isn't avalia
 ORDER_CARD = jinja2.Template("*Uber order 🚘*\n\n"
                              "_Your order has been sent to Uber. I will send you "
                              "all updates._")
-UPDATE_CARD = jinja2.Template("_{% if data.status == \"accepted\" %}Uber found a driver and the car goes to you.{% endif %}"
-                              "{% if data.status == \"arriving\" %}Driver has arrived or will arrive very shortly.{% endif %}"
-                              "{% if data.status == \"in_progress\" %}The Uber request in progress. Have a nice trip!{% endif %}"
-                              "{% if data.status == \"driver_canceled\" %}Unfortunally, driver cancelled your Uber "
-                              "request. You can make order again. {% endif %}"
-                              "{% if data.status == \"completed\" %}Your Uber trip is completed. "
-                              "Thanks for using me to get Uber 😊{% endif %}_")
+UPDATE_CARD = jinja2.Template(
+    "_{% if data.status == \"accepted\" %}Uber found a driver and the car goes to you.{% endif %}"
+    "{% if data.status == \"arriving\" %}Driver has arrived or will arrive very shortly.{% endif %}"
+    "{% if data.status == \"in_progress\" %}The Uber request in progress. Have a nice trip!{% endif %}"
+    "{% if data.status == \"driver_canceled\" %}Unfortunally, driver cancelled your Uber "
+    "request. You can make order again. {% endif %}"
+    "{% if data.status == \"completed\" %}Your Uber trip is completed. "
+    "Thanks for using me to get Uber 😊{% endif %}_")
 
 HOME_BUTTON = '🏡 Home'
 WORK_BUTTON = '👔 Work'
@@ -49,9 +51,9 @@ CURRENT_ORDER_URL = "https://api.uber.com/v1/requests/current"
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
 
-class UberRedirectResource:
-    def on_get(self, req, resp):
-        code = req.get_param('code')
+class UberRedirectHandler(BugsnagRequestHandler):
+    def get(self):
+        code = self.get_argument('code')
         access_data = requests.post(TOKEN_URL, data={
             'client_secret': CLIENT_SECRET,
             'client_id': CLIENT_ID,
@@ -61,7 +63,7 @@ class UberRedirectResource:
         }).json()
 
         bot = build_bot()
-        u_id = int(bot.redis.get('core:shrt:hash:{}'.format(req.cookies['user'])))
+        u_id = int(bot.redis.get('core:shrt:hash:{}'.format(self.get_cookie('user'))))
         bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
         bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
         bot.user_set(u_id, 'uber:authorized', '1')
@@ -76,7 +78,7 @@ class UberRedirectResource:
         fake_message.u_id = u_id
         bot.call_handler(fake_message, 'uber-choose-location')
 
-        raise falcon.HTTPMovedPermanently('https://telegram.me/leonardbot')
+        raise tornado.web.HTTPError(301, 'https://telegram.me/leonardbot')
 
 
 def register(bot):
@@ -89,7 +91,9 @@ def register(bot):
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
 
-    oauth_redirect = bot.app.application.add_route('/uber/redirect', UberRedirectResource())
+    oauth_redirect = bot.app.application.add_handlers(r'.*', [
+        (r'/uber/redirect', UberRedirectHandler)
+    ])
 
 
 def choose_current_location(message, bot):
@@ -205,7 +209,8 @@ def choose_product(message, bot):
         keyboard.append(current_row)
 
     bot.telegram.send_message(message.u_id, CHOOSE_PRODUCT.render(products=products['products']),
-                              parse_mode=telegram.ParseMode.MARKDOWN, reply_markup=telegram.ReplyKeyboardMarkup(keyboard),
+                              parse_mode=telegram.ParseMode.MARKDOWN,
+                              reply_markup=telegram.ReplyKeyboardMarkup(keyboard),
                               resize_keyboard=True)
     bot.user_set(message.u_id, 'uber:avaliable_products', json.dumps(product_ids))
 

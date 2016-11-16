@@ -2,7 +2,8 @@ import os
 import string
 import random
 import hashlib
-import falcon
+import tornado.web
+from bugsnag.tornado import BugsnagRequestHandler
 import redis
 
 ALPHABET = string.ascii_letters + string.digits
@@ -11,21 +12,21 @@ SHORT_LINK_FORMAT = "{}/l/".format(os.environ['WEBHOOK_HOSTNAME'])
 redis_client = redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
 
 
-class GetLinkResource:
-    def on_get(self, req, resp, query):
-        base_key = 'core:shrt:link:{}:'.format(query)
+class GetLinkHandler(BugsnagRequestHandler):
+    def get(self):
+        base_key = 'core:shrt:link:{}:'.format(self.get_query_argument('query'))
         full_link = redis_client.get(base_key + 'url')
         if full_link is None:
-            raise falcon.HTTPMovedPermanently('http://sheldon.ai/')
+            raise tornado.web.HTTPError(301, 'http://sheldon.ai/')
         redis_client.incr(base_key + 'visits')
         user_hash = redis_client.get(base_key + 'user')
         print('Uber user hash:', user_hash)
-        resp.status = '301 Moved Permanently'
+        self.set_status(301, 'Moved Permanently')
         if user_hash:
             print('setting cookie in uber')
-            resp.append_header('Set-Cookie', 'user={}; Domain=leonardbot.herokuapp.com; Secure'.format(user_hash.decode('utf-8')))
-        resp.location = full_link.decode('utf-8')
-        print(resp._headers)
+            self.add_header('Set-Cookie', 'user={}; Domain=leonardbot.herokuapp.com; Secure'.format(user_hash.decode('utf-8')))
+        self.set_header('Location', full_link.decode('utf-8'))
+        # print(self.get_headers())
 
 
 def short_user_link(u_id, link, code_size=11):

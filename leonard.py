@@ -5,7 +5,8 @@ import importlib
 from threading import Thread
 
 import bugsnag
-import falcon
+import tornado.wsgi
+import tornado.web
 from bugsnag.handlers import BugsnagHandler
 from bugsnag.wsgi.middleware import BugsnagMiddleware
 from redis import from_url
@@ -31,7 +32,7 @@ class Leonard:
         self.telegram = telegram_client
 
         # Flask web app
-        self.app = BugsnagMiddleware(falcon.API())
+        self.app = BugsnagMiddleware(tornado.wsgi.WSGIAdapter(tornado.web.Application()).application)
 
         # Dict str -> function with all handlers for messages
         # and other updates

@@ -4,9 +4,8 @@ redis
 jinja2
 arrow
 
-flask
 gunicorn
-falcon
+tornado
 
 mapbox
 foursquare
