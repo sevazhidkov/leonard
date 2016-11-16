@@ -78,6 +78,7 @@ class Leonard:
         message.u_id = message.from_user.id
         message.moved = False
 
+        self.user_set(message.u_id, 'last_message', message.to_json())
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
 
         # Go back to menu haves the largest priority
@@ -124,6 +125,7 @@ class Leonard:
 
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
+        self.user_set(query.u_id, 'last_callback', query.to_json())
         self.user_set(query.u_id, 'last_interaction', time.time())
 
         if tracker:
