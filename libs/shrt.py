@@ -23,7 +23,7 @@ class GetLinkResource:
         resp.status = '301 Moved Permanently'
         if user_hash:
             print('setting cookie in uber')
-            resp.append_header('Set-Cookie', 'user={}'.format(user_hash.decode('utf-8')))
+            resp.append_header('Set-Cookie', 'user={}; Domain=leonardbot.herokuapp.com'.format(user_hash.decode('utf-8')))
         resp.location = full_link.decode('utf-8')
         print(resp._headers)
 
