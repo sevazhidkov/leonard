@@ -46,6 +46,8 @@ PRODUCTS_URL = "https://api.uber.com/v1/products"
 ORDER_URL = "https://api.uber.com/v1/requests"
 CURRENT_ORDER_URL = "https://api.uber.com/v1/requests/current"
 
+ORDER_DEEP_LINK = 'https://m.uber.com/ul?client_id={}&action=setPickup&pickup=my_location&dropoff[latitude]={}&dropoff[longitude]={}'
+
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
 
