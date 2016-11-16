@@ -91,7 +91,7 @@ def register(bot):
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
 
-    oauth_redirect = bot.app.application.add_handlers(r'.*', [
+    oauth_redirect = bot.tornado.add_handlers(r'.*', [
         (r'/uber/redirect', UberRedirectHandler)
     ])
 

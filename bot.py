@@ -7,6 +7,7 @@ from time import sleep
 import bugsnag
 import tornado.web
 from bugsnag.tornado import BugsnagRequestHandler
+from urllib.parse import quote_plus
 
 import telegram
 from telegram.error import NetworkError, Unauthorized, RetryAfter
@@ -18,8 +19,10 @@ WEBHOOK_HOSTNAME = os.environ.get('WEBHOOK_HOSTNAME', 'https://leonardbot.heroku
 
 
 class WebhookHandler(BugsnagRequestHandler):
-    def __init__(self, type1, type2, application, request, **kwargs):
+    def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
+
+    def initialize(self, **kwargs):
         self.bot = kwargs['bot']
 
     def post(self):
@@ -28,7 +31,7 @@ class WebhookHandler(BugsnagRequestHandler):
             return
 
         # Read the request body.
-        body = self.request.stream.read()
+        body = self.request.body
         if not body:
             raise tornado.web.HTTPError(400, 'A valid JSON document is required.')
 
@@ -64,10 +67,10 @@ print('Collecting plugins')
 bot.collect_plugins()
 
 print('Setting routes')
-bot.app.application.add_handlers(r'.*', [
-    (r'/webhook/{}'.format(os.environ['BOT_TOKEN']), WebhookHandler, {'bot': bot})
+bot.tornado.add_handlers(r'.*', [
+    (r'/webhook/{}'.format(quote_plus(os.environ['BOT_TOKEN'])), WebhookHandler, {'bot': bot})
 ])
-bot.app.application.add_handlers(r'.*', [
+bot.tornado.add_handlers(r'.*', [
     (r'/l/{query}', shrt.GetLinkHandler)
 ])
 

@@ -32,7 +32,8 @@ class Leonard:
         self.telegram = telegram_client
 
         # Flask web app
-        self.app = BugsnagMiddleware(tornado.wsgi.WSGIAdapter(tornado.web.Application()).application)
+        self.tornado = tornado.web.Application()
+        self.app = BugsnagMiddleware(tornado.wsgi.WSGIAdapter(self.tornado))
 
         # Dict str -> function with all handlers for messages
         # and other updates
