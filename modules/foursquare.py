@@ -203,10 +203,7 @@ def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location'),
-                 telegram.InlineKeyboardButton('Get a Uber 🚘', url=ORDER_DEEP_LINK.format(
-                    CLIENT_ID, venue['location']['lat'], venue['location']['long']
-                ))],
+                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
         keyboard[0].append(back_button)
