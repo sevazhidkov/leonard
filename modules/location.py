@@ -66,7 +66,8 @@ def welcome_location_setup(message, bot):
     bot.telegram.send_message(
         message.u_id, WELCOME_LOCATION_SETUP,
         reply_markup=telegram.ReplyKeyboardMarkup(
-            [[telegram.KeyboardButton('📍 Send current location', request_location=True)]]
+            [[telegram.KeyboardButton('📍 Send current location', request_location=True)]],
+            resize_keyboard=True
         )
     )
     bot.telegram.send_message(message.u_id, HOW_TO_SEND_LOCATION)
