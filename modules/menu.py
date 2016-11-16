@@ -24,7 +24,7 @@ def register(bot):
     bot.callback_handlers['main-menu-callback'] = main_menu_callback
 
 
-def main_menu(message, bot):
+def main_menu(message, bot, phrase=None):
     if not bot.user_get(message.u_id, 'registered'):
         bot.call_handler(message, 'welcome-message')
         return
@@ -38,7 +38,7 @@ def main_menu(message, bot):
 
     keyboard = get_keyboard()
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    bot.telegram.send_message(message.u_id, random.choice(GREETING_PHRASES),
+    bot.telegram.send_message(message.u_id, phrase or random.choice(GREETING_PHRASES),
                               reply_markup=reply_markup)
 
 

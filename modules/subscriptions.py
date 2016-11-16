@@ -10,7 +10,9 @@ SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'M
                    [{'plugin': 'news', 'name': 'news-digest', 'text': 'News digest 📰',
                     'on_add': 'Cool! I will send you news next evening 👌'},
                     {'plugin': 'producthunt', 'name': 'daily-hunt', 'text': 'Product Hunt 🔥',
-                     'on_add': 'Cool! I will send you news next evening 👌'}]]
+                     'on_add': 'Cool! I will send you news next evening 👌'}],
+                    [{'plugin': 'returns', 'name': 'messages', 'text': 'Reminders about bot 🤖',
+                     'default': '1'}]]
 
 DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
 DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'
@@ -96,9 +98,12 @@ def set_subscription(message, bot: Leonard):
         return
 
     key = 'notifications:{}:{}'.format(active_subscription['plugin'], active_subscription['name'])
-    current_status = bot.user_get(message.u_id, key)
+    default_status = None
+    if 'default' in active_subscription:
+        default_status = active_subscription['default']
+    current_status = bot.user_get(message.u_id, key) or default_status
     if current_status == '1':
-        bot.user_set(message.u_id, key, '')
+        bot.user_set(message.u_id, key, '0')
         reply_text = active_subscription.get('on_delete', DEFAULT_UNSUBSCRIBE_TEXT)
     else:
         bot.user_set(message.u_id, key, '1')
@@ -114,7 +119,12 @@ def build_subscribes_keyboard(message, bot):
     for line in SUBSCRIBES_MENU:
         subkeyboard = []
         for row in line:
-            row_status = bot.user_get(message.u_id, 'notifications:{}:{}'.format(row['plugin'], row['name']))
+            default_status = None
+            if 'default' in row:
+                default_status = row['default']
+            row_status = bot.user_get(
+                message.u_id, 'notifications:{}:{}'.format(row['plugin'], row['name'])
+            ) or default_status
             if row_status == '1':
                 status_emoji = '✅'
             else:
