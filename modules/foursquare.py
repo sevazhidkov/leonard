@@ -7,16 +7,15 @@ import foursquare
 from modules.uber import CLIENT_ID, ORDER_DEEP_LINK
 from modules.location import set_location
 
-SEND_YOUR_LOCATION = ("Find a cool place using Foursquare data isn't problem for me 👌\n\n"
-                      "🌏 Where are you? You can use your default location")
+SEND_YOUR_LOCATION = "🌏 Where are you? You can use your default location"
 SEND_YOUR_QUERY = ("Cool 👍 Tell me, where do you want to go? ☕ 🍝 🍟\n\n"
-                   "Like \"dance club\", \"quiet place\" or \"big moll\". "
-                   "Otherwise you can use one of our variants 👇")
+                   "You can send your own query or use one of our variants 👇")
 NOT_FOUND = "I'm sorry, but there is nothing to show you for now 😁"
-WAIT_A_SECOND = 'Wait a second, please 🕐'
+WAIT_A_SECOND = 'Wait a second, please, I\'m searching cool venue on the Foursquare 🕐'
 SEARCH_RESULT = jinja2.Template("*{{ venue.name }}*{% if venue.location.address %}, _{{ venue.location.address }}_"
-                                "{% endif %}\n\n{% if venue.rating %}"
-                                "{{'⭐️' * venue.rating}}\n\n{% endif %}{{ venue.url }}")
+                                "{% endif %}\n\n{% for reason in venue.reasons %}— {{ reason }}{% endfor %}\n\n"
+                                "{% if venue.rating %}{{'⭐️' * venue.rating}}\n"
+                                "{% endif %}{{ '💲' * venue.price_tier }}\n\n{{ venue.url }}")
 
 CATEGORY_EMOJI = {
     'Café': '🍝'
@@ -67,7 +66,6 @@ def search_results(message, bot):
     response = client.venues.explore(
         params={'query': query, 'll': '{},{}'.format(location['lat'], location['long'])}
     )
-    bot.logger.info('Foursquare answer: {}'.format(response))
 
     results = []
     for item in response['groups'][0]['items']:
@@ -81,9 +79,12 @@ def search_results(message, bot):
         else:
             template = '«{}»'
 
+        print(item['venue'])
+
         venue['name'] = template.format(item['venue']['name'])
         venue['reasons'] = [reason['summary'] for reason in item['reasons']['items']]
         venue['url'] = FOURSQUARE_LINK.format(item['venue']['id'])
+        venue['price_tier'] = item['venue']['price']['tier']
 
         bot.logger.info(item['venue']['location'])
 
