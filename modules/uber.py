@@ -48,8 +48,6 @@ PRODUCTS_URL = "https://api.uber.com/v1/products"
 ORDER_URL = "https://api.uber.com/v1/requests"
 CURRENT_ORDER_URL = "https://api.uber.com/v1/requests/current"
 
-ORDER_DEEP_LINK = 'https://m.uber.com/ul?client_id={}&action=setPickup&pickup=my_location&dropoff[latitude]={}&dropoff[longitude]={}'
-
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
 
 
@@ -160,7 +158,10 @@ def choose_product(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'uber-confirm-order')
 
     if message.location:
-        bot.user_set(message.u_id, 'uber:destination:location', json.dumps(message.location))
+        bot.user_set(message.u_id, 'uber:destination:location', json.dumps({
+            'latitude': message.location['latitude'],
+            'longitude': message.location['longitude']
+        }))
     else:
         bot.user_set(message.u_id, 'uber:destination:place_id', PLACE_IDS[message.text])
 
