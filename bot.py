@@ -5,7 +5,9 @@ import logging
 from time import sleep
 
 import bugsnag
-import falcon
+import tornado.web
+from bugsnag.tornado import BugsnagRequestHandler
+from urllib.parse import quote_plus
 
 import telegram
 from telegram.error import NetworkError, Unauthorized, RetryAfter
@@ -16,35 +18,35 @@ from libs import shrt
 WEBHOOK_HOSTNAME = os.environ.get('WEBHOOK_HOSTNAME', 'https://leonardbot.herokuapp.com')
 
 
-class WebhookResource:
-    def __init__(self, bot):
-        self.bot = bot
+class WebhookHandler(BugsnagRequestHandler):
+    def __init__(self, application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
 
-    def on_post(self, req, resp):
-        if req.content_length in (None, 0):
+    def initialize(self, **kwargs):
+        self.bot = kwargs['bot']
+
+    def post(self):
+        if self.request.headers.get('Content-Length') in (None, 0):
             # Nothing to do
             return
 
         # Read the request body.
-        body = req.stream.read()
+        body = self.request.body
         if not body:
-            raise falcon.HTTPBadRequest('Empty request body',
-                                        'A valid JSON document is required.')
+            raise tornado.web.HTTPError(400, 'A valid JSON document is required.')
 
         try:
             content = json.loads(body.decode('utf-8'))
 
         except (ValueError, UnicodeDecodeError):
-            raise falcon.HTTPError(falcon.HTTP_753,
-                                   'Malformed JSON',
-                                   'Could not decode the request body. The '
-                                   'JSON was incorrect or not encoded as '
-                                   'UTF-8.')
+            raise tornado.web.HTTPError(753, 'Could not decode the request body. The '
+                                             'JSON was incorrect or not encoded as '
+                                             'UTF-8.')
 
         update = telegram.Update.de_json(content, self.bot.telegram)
-        bot.process_update(update)
+        self.bot.process_update(update)
 
-        resp.body = 'ok'
+        self.write('ok')
 
 
 debug = False
@@ -65,8 +67,12 @@ print('Collecting plugins')
 bot.collect_plugins()
 
 print('Setting routes')
-bot.app.application.add_route('/webhook/{}'.format(os.environ['BOT_TOKEN']), WebhookResource(bot))
-bot.app.application.add_route('/l/{query}', shrt.GetLinkResource())
+bot.tornado.add_handlers(r'.*', [
+    (r'/webhook/{}'.format(quote_plus(os.environ['BOT_TOKEN'])), WebhookHandler, {'bot': bot})
+])
+bot.tornado.add_handlers(r'.*', [
+    (r'/l/{query}', shrt.GetLinkHandler)
+])
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':
     bot.telegram.setWebhook('')
