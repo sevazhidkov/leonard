@@ -4,7 +4,6 @@ import jinja2
 import telegram
 import foursquare
 
-from modules.uber import CLIENT_ID, ORDER_DEEP_LINK
 from modules.location import set_location
 
 SEND_YOUR_LOCATION = "🌏 Where are you? You can use your default location"
