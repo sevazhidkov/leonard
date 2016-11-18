@@ -63,6 +63,7 @@ class UberRedirectHandler(BugsnagRequestHandler):
         }).json()
 
         bot = build_bot()
+        print(self.cookies)
         u_id = int(bot.redis.get('core:shrt:hash:{}'.format(self.get_cookie('user'))))
         bot.user_set(u_id, 'uber:access_token', access_data['access_token'], ex=access_data['expires_in'])
         bot.user_set(u_id, 'uber:refresh_token', access_data['refresh_token'])
