@@ -30,6 +30,9 @@ def wolfram_result(message, bot: Leonard):
         return
     response = bot.wolfram_client.query(message.text)
     bot.logger.info('Wolfram Alpha response: "{}" for query "{}"'.format(response, message.text))
+    if not hasattr(response, 'pods'):
+        bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND)
+        return
     pods = list(response.pods)
     exists = len(pods)
     if exists:
