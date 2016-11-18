@@ -71,7 +71,7 @@ bot.tornado.add_handlers(r'.*', [
     (r'/webhook/{}'.format(quote_plus(os.environ['BOT_TOKEN'])), WebhookHandler, {'bot': bot})
 ])
 bot.tornado.add_handlers(r'.*', [
-    (r'/l/{query}', shrt.GetLinkHandler)
+    (r'/l/(.*)', shrt.GetLinkHandler)
 ])
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':

@@ -13,8 +13,8 @@ redis_client = redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:637
 
 
 class GetLinkHandler(BugsnagRequestHandler):
-    def get(self):
-        base_key = 'core:shrt:link:{}:'.format(self.get_query_argument('query'))
+    def get(self, query):
+        base_key = 'core:shrt:link:{}:'.format(query)
         full_link = redis_client.get(base_key + 'url')
         if full_link is None:
             raise tornado.web.HTTPError(301, 'http://sheldon.ai/')
