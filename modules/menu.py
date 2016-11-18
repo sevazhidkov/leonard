@@ -10,7 +10,7 @@ MENU = [[('handler', 'Venues ☕', 'foursquare-location-choice'),
         [('handler', '9GAG 😅', 'meme-show'),
         ('handler', 'Product Hunt 🔥', 'producthunt-get-entry')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
-         ('handler', 'Settings 🔧', 'settings-show')]]
+         ('handler', 'Change location 🗺', 'location-new')]]
 
 GREETING_PHRASES = ['What do you want to do? 🤖',
                     'Do you need anything? 🤖',

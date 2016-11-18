@@ -15,6 +15,7 @@ from redis import from_url
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 
+from modules.location import set_location
 from modules.menu import get_keyboard
 from libs.analytics import track_message
 
@@ -82,6 +83,11 @@ class Leonard:
 
         self.user_set(message.u_id, 'last_message', message.to_json())
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
+
+        if current_handler == 'main-menu' and message.location:
+            set_location(self, message.u_id, message.location)
+            self.telegram.send_message(message.u_id, 'You location has been changed 🙂')
+            return
 
         # Go back to menu haves the largest priority
         if message.text == self.MENU_BUTTON:

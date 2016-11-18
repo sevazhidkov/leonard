@@ -19,6 +19,8 @@ geocoder = Geocoder()
 def register(bot):
     bot.handlers['welcome-location-setup'] = welcome_location_setup
     bot.handlers['location-setup-result'] = location_setup_result
+    bot.handlers['new-location-setup-result'] = new_location_setup_result
+    bot.handlers['location-new'] = new_location
 
 
 def geocode(location_name, bot=None):
@@ -90,3 +92,28 @@ def set_location(bot, u_id, location):
     result = reverse_geocode(location['latitude'], location['longitude'], bot)
     bot.user_set(u_id, 'location', json.dumps(result))
     return result
+
+
+def new_location(message, bot):
+    bot.user_set(message.u_id, 'next_handler', 'new-location-setup-result')
+    bot.telegram.send_message(message.u_id, HOW_TO_SEND_LOCATION, reply_markup=telegram.ReplyKeyboardMarkup(
+        [
+            [telegram.KeyboardButton('📍 Send current location', request_location=True)],
+            [bot.MENU_BUTTON]
+        ],
+        resize_keyboard=True
+    ))
+
+
+def new_location_setup_result(message, bot):
+    if not message.location:
+        result = geocode(message.text, bot)
+        if not result:
+            bot.telegram.send_message(message.u_id, TYPE_LOCATION_AGAIN)
+            bot.user_set(message.u_id, 'next_handler', 'new-location-setup-result')
+            return
+        bot.user_set(message.u_id, 'location', json.dumps(result))
+    else:
+        set_location(bot, message.u_id, message.location)
+    bot.telegram.send_message(message.u_id, 'Thanks 👌')
+    bot.call_handler(message, 'main-menu')
