@@ -33,7 +33,7 @@ class Leonard:
         self.telegram = telegram_client
 
         # Flask web app
-        self.tornado = tornado.web.Application()
+        self.tornado = tornado.web.Application(cookie_secret=os.environ['BOT_SECRET'])
         self.app = BugsnagMiddleware(tornado.wsgi.WSGIAdapter(self.tornado))
 
         # Dict str -> function with all handlers for messages
