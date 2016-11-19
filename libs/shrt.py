@@ -25,8 +25,7 @@ class GetLinkHandler(BugsnagRequestHandler):
         if user_hash:
             print('setting cookie in uber')
             self.set_cookie('user', user_hash.decode('utf-8'))
-            self.set_cookie('Domain', 'leonardbot.herokuapp.com')
-            self.set_cookie('Secure', '')
+            self.set_secure_cookie('Domain', 'leonardbot.herokuapp.com')
         self.set_header('Location', full_link.decode('utf-8'))
         print(self._headers)
         print(self._headers_written)
