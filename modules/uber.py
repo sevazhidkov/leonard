@@ -79,7 +79,7 @@ class UberRedirectHandler(BugsnagRequestHandler):
         fake_message.u_id = u_id
         bot.call_handler(fake_message, 'uber-choose-location')
 
-        raise tornado.web.HTTPError(301, 'https://telegram.me/leonardbot')
+        self.redirect('https://telegram.me/leonardbot', permanent=True)
 
 
 def register(bot):
