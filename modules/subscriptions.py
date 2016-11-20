@@ -17,13 +17,10 @@ SUBSCRIBES_MENU = [[{'plugin': 'weather', 'name': 'morning-forecast', 'text': 'M
 DEFAULT_SUBSCRIBE_TEXT = 'Cool! I will write you next time.'
 DEFAULT_UNSUBSCRIBE_TEXT = 'Sorry 😁'
 
-INITIAL_WEATHER_OFFER = jinja2.Template("""You shouldn't write me to get help – you can subscribe to some notification messages.
-
-⛅ Maybe weather? Morning forecasts or notifications about rain?
-""")
+INITIAL_WEATHER_OFFER = jinja2.Template("""Can I send you everyday morning forecast ⛅ ? Or maybe notifications before rain? ☔""")
 WEATHER_SETUP_RESULT = jinja2.Template(
-    "👌 Not a problem, {% if result %}I subscribed you. It's ready " +
-    "and will notificate you next time.{% else %}you can always change it later.{% endif %}"
+    "{% if result %} That's cool, I won't let you down 👌 {% else %}"
+    "Not a problem, you can always change it later 🤔{% endif %}"
 )
 
 

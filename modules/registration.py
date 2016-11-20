@@ -1,13 +1,7 @@
 import jinja2
 
-WELCOME_MESSSAGE_TEMPLATE = jinja2.Template("""Hello{% if first_name %}, {{first_name}}{% endif %} 👋
-
-Welcome abroad! My name is Leonard and I can help you with your everyday tasks:
-
-🍝 find a perfect restaurant,
-🚕 get a Uber car,
-📰 read news on your favourite websites
-and much more...""")
+WELCOME_MESSSAGE_TEMPLATE = jinja2.Template("""Hi{% if first_name %}, {{first_name}}{% endif %} 👋""")
+INTRODUCTION_MESSAGE = "My name is Leonard. I was created to help you with your everyday tasks ✌️"
 
 WELCOME_SETUP_RESULT = ("Thanks 👌\n\nNow we're ready to go, enjoy using the bot 🤖")
 CONTACT_WITH = ("📖 If you have any problems or suggestions, you can contact "
@@ -24,6 +18,7 @@ def welcome_message(message, bot):
         chat_id=message.u_id,
         text=WELCOME_MESSSAGE_TEMPLATE.render(first_name=message.from_user.first_name)
     )
+    bot.telegram.send_message(message.u_id, INTRODUCTION_MESSAGE)
     message.handler = 'registration-started'
     bot.call_handler(message, 'subscriptions-setup')
 

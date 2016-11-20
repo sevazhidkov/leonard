@@ -5,10 +5,8 @@ from mapbox import Geocoder
 
 from libs.googleapis import get_timezone
 
-WELCOME_LOCATION_SETUP = ("🌍 I have a lot amazing functions that depends on your location, " +
-                          "like getting a Uber taxi 🚕 , weather forecasts 🌄 and so on.\n\n" +
-                          "I want to know your current location 🌐, you can always change it later. " +
-                          "If you don't want to tell me - just think up")
+WELCOME_LOCATION_SETUP = ("I have a lot of amazing functions that depends on your location 🌍, " +
+                          "can you tell it?")
 
 HOW_TO_SEND_LOCATION = ("You can attach location to message 📎 or type name of your city 🔡")
 TYPE_LOCATION_AGAIN = "Oh, sorry, I don't understand 🙁\n\nYou can try again 🔡 or send me a location 🌐"
