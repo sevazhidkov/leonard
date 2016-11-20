@@ -263,7 +263,8 @@ def rain_notifications_check(bot):
             if arrow.get(hour['time']).day != time.day:
                 continue
 
-            if hour['precipProbability'] > 0.5:
+            if ('precipProbability' in hour and hour['precipProbability'] > 0.5 and
+                'precipType' in hour and hour['precipType'] in ['rain', 'sleet']):
                 rain_hours.append({
                     'time': arrow.get(hour['time']).to(weather_data['timezone']).format('H:00'),
                     'temperature': hour['temperature'],
