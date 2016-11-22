@@ -65,11 +65,6 @@ def results_view(message, bot):
     photo = bot.telegram.getFile(file_id)
     bot.logger.info('Photo for Vinci url: {}'.format(photo.file_path))
     content = requests.get(photo.file_path).content
-    bot.vinci_s3.put_object(
-        Bucket='leonard-vinci',
-        Key=file_id,
-        Body=content
-    )
     response = requests.post(VINCI_PRELOAD, files={
         'file': ('photo.jpg', content)
     }).json()
@@ -82,6 +77,12 @@ def results_view(message, bot):
         photo=VINCI_PROCESS.format(response['preload'], filters[0]['id']),
         reply_markup=build_results_keyboard(0, message, bot),
         caption=filters[0]['name'] + ' ' + filters[0]['emoji']
+    )
+    # Upload file to s3 for future data science!
+    bot.vinci_s3.put_object(
+        Bucket='leonard-vinci',
+        Key=file_id,
+        Body=content
     )
 
 
