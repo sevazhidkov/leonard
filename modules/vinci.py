@@ -81,7 +81,7 @@ def results_view(message, bot):
     # Upload file to s3 for future data science!
     bot.vinci_s3.put_object(
         Bucket='leonard-vinci',
-        Key=file_id,
+        Key=file_id + '.jpg',
         Body=content
     )
 
