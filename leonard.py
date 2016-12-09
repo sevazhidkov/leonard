@@ -11,7 +11,6 @@ from bugsnag.handlers import BugsnagHandler
 from bugsnag.wsgi.middleware import BugsnagMiddleware
 from redis import from_url
 
-
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.message import Message
 
@@ -81,6 +80,11 @@ class Leonard:
         message.u_id = message.from_user.id
         message.moved = False
 
+        if message.text.startswith('/announce') and message.chat.id == -163122359:
+            announcement = ' '.join(message.text.split()[1:])
+            Thread(target=self.announce, args=(announcement,)).start()
+            return
+
         self.user_set(message.u_id, 'last_message', message.to_json())
         current_handler = self.user_get(message.u_id, 'next_handler') or self.default_handler
 
@@ -112,6 +116,14 @@ class Leonard:
         self.user_set(message.u_id, 'last_interaction', time.time())
 
         Thread(target=track_message, args=(self, message, current_handler, tracker)).start()
+
+    def announce(self, message):
+        for key in self.redis.scan_iter(match='user:*:registered'):
+            self.telegram.send_message(
+                key.decode('utf-8').split(':')[1],
+                message.replace('\\n', '\n'),
+                parse_mode='HTML'
+            )
 
     def process_callback_query(self, query):
         query.u_id = query.from_user.id

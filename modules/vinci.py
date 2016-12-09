@@ -1,7 +1,7 @@
-
 import time
 import requests
 import telegram
+import boto3
 
 SEND_PHOTO = 'Send your photo 📷 and I will add beautiful filters to it\n⛲️ 🌃 🌄'
 WAIT_A_SECOND = 'Wait a second, neural networks are thinking 🕐'
@@ -35,6 +35,7 @@ def register(bot):
     bot.handlers['vinci-upload-image'] = upload_image
     bot.handlers['vinci-results-view'] = results_view
     bot.handlers['vinci-results-iteration'] = results_iteration
+    bot.vinci_s3 = boto3.client('s3')
 
 
 def upload_image(message, bot):
@@ -76,6 +77,12 @@ def results_view(message, bot):
         photo=VINCI_PROCESS.format(response['preload'], filters[0]['id']),
         reply_markup=build_results_keyboard(0, message, bot),
         caption=filters[0]['name'] + ' ' + filters[0]['emoji']
+    )
+    # Upload file to s3 for future data science!
+    bot.vinci_s3.put_object(
+        Bucket='leonard-vinci',
+        Key=file_id + '.jpg',
+        Body=content
     )
 
 
