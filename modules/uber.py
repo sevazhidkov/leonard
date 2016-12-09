@@ -230,6 +230,7 @@ def confirm_order(message, bot):
     request_data = json.loads(bot.user_get(message.u_id, 'uber:request_data'))
     token = bot.user_get(message.u_id, 'uber:access_token')
     request_data['product_id'] = product_ids[message.text]
+    print('Uber request data:', request_data)
     response = requests.post(ORDER_URL, headers={
         'Authorization': 'Bearer {}'.format(token),
         'Content-Type': 'application/json',
