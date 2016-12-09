@@ -12,7 +12,18 @@ def main():
     for key in bot.redis.scan_iter(match='user:*:registered'):
         count += 1
 
-    print('Total users:', count)
+    notifications_count = {}
+    for key in bot.redis.scan_iter(match='user:*:notifications:*'):
+        key = key.decode('utf-8')
+        _, _, _, group, name = key.split(':')
+        notification = '{}:{}'.format(group, name)
+        notifications_count[notification] = notifications_count.get(notification, 0) + 1
+
+    print('Total users:', count, end='\n\n')
+
+    print('Notifications:')
+    for notification, n in list(sorted(notifications_count.items(), key=lambda x: x[1])):
+        print(notification, '-', n)
 
 
 if __name__ == '__main__':
