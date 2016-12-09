@@ -15,6 +15,7 @@ def main():
     notifications_count = {}
     for key in bot.redis.scan_iter(match='user:*:notifications:*'):
         key = key.decode('utf-8')
+        print(key)
         _, _, _, group, name = key.split(':')
         notification = '{}:{}'.format(group, name)
         notifications_count[notification] = notifications_count.get(notification, 0) + 1
