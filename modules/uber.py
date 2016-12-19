@@ -129,6 +129,7 @@ def choose_current_location(message, bot):
     bot.telegram.send_message(message.u_id, CHOOSE_CURRENT_LOCATION, reply_markup=keyboard)
 
     bot.user_set(message.u_id, 'uber:location:place_id', '')
+    bot.user_set(message.u_id, 'uber:location:location', '')
     bot.user_set(message.u_id, 'uber:destination:location', '')
     bot.user_set(message.u_id, 'uber:destination:place_id', '')
 
@@ -142,7 +143,10 @@ def choose_destination(message, bot):
     keyboard = [[HOME_BUTTON, WORK_BUTTON],
                 [bot.MENU_BUTTON]]
     if message.location:
-        set_location(bot, message.u_id, message.location)
+        bot.user_set(message.u_id, 'uber:location:location', json.dumps({
+            'latitude': message.location['latitude'],
+            'longitude': message.location['longitude']
+        }))
     elif message.text in [HOME_BUTTON, WORK_BUTTON]:
         bot.user_set(message.u_id, 'uber:location:place_id',
                      PLACE_IDS[message.text])
@@ -168,7 +172,7 @@ def choose_product(message, bot):
 
     # Prepare request to Uber - we'll add product id later
     request_data = {}
-    user_location = json.loads(bot.user_get(message.u_id, 'location'))
+    user_location = json.loads(bot.user_get(message.u_id, 'uber:location:location'))
     place_id = bot.user_get(message.u_id, 'uber:location:place_id')
 
     if place_id:
