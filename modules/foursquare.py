@@ -83,7 +83,10 @@ def search_results(message, bot):
         venue['name'] = template.format(item['venue']['name'])
         venue['reasons'] = [reason['summary'] for reason in item['reasons']['items']]
         venue['url'] = FOURSQUARE_LINK.format(item['venue']['id'])
-        venue['price_tier'] = item['venue']['price']['tier']
+        try:
+            venue['price_tier'] = item['venue']['price']['tier']
+        except KeyError:
+            venue['price_tier'] = 2
 
         bot.logger.info(item['venue']['location'])
 
