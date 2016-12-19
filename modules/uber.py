@@ -45,7 +45,7 @@ AUTH_URL = "https://login.uber.com/oauth/v2/authorize?client_id={}&response_type
 TOKEN_URL = "https://login.uber.com/oauth/v2/token"
 PLACES_URL = "https://api.uber.com/v1/places/{}"
 PRODUCTS_URL = "https://api.uber.com/v1/products"
-ORDER_URL = "https://api.uber.com/v1/requests"
+ORDER_URL = "https://api.uber.com/v1.2/requests"
 CURRENT_ORDER_URL = "https://api.uber.com/v1/requests/current"
 
 PLACE_IDS = {HOME_BUTTON: 'home', WORK_BUTTON: 'work'}
