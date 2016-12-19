@@ -119,13 +119,11 @@ def choose_current_location(message, bot):
         if 'address' in response:
             bot.user_set(message.u_id, 'uber:places:{}'.format(place_id), '1', ex=60 * 60 * 24 * 14)
             place_buttons.append(place_button)
-    base_location_name = json.loads(bot.user_get(message.u_id, 'location'))['full_name']
     keyboard = telegram.ReplyKeyboardMarkup([
         [telegram.KeyboardButton("📍 Current location", request_location=True)],
         place_buttons,
-        ['📦 {}'.format(base_location_name)],
         [bot.MENU_BUTTON],
-    ])
+    ], resize_keyboard=True)
     bot.telegram.send_message(message.u_id, CHOOSE_CURRENT_LOCATION, reply_markup=keyboard)
 
     bot.user_set(message.u_id, 'uber:location:place_id', '')
@@ -153,7 +151,7 @@ def choose_destination(message, bot):
         keyboard[0].remove(message.text)
 
     bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
-                              reply_markup=telegram.ReplyKeyboardMarkup(keyboard))
+                              reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
 
 def choose_product(message, bot):
