@@ -225,12 +225,15 @@ def morning_forecast_check(bot):
 
 def morning_forecast_send(bot, users):
     for u_id in users:
-        bot.telegram.send_message(u_id, 'Good morning, here is today weather forecast for you ❤️')
-        message = FakeMessage()
-        message.u_id = u_id
-        bot.call_handler(message, 'weather-show')
-        key = 'user:{}:notifications:weather:morning-forecast:sent'.format(u_id)
-        bot.redis.set(key, '1', ex=(len(MORNING_FORECAST_HOURS) + 1) * 60 * 60)
+        try:
+            bot.telegram.send_message(u_id, 'Good morning, here is today weather forecast for you ❤️')
+            message = FakeMessage()
+            message.u_id = u_id
+            bot.call_handler(message, 'weather-show')
+            key = 'user:{}:notifications:weather:morning-forecast:sent'.format(u_id)
+            bot.redis.set(key, '1', ex=(len(MORNING_FORECAST_HOURS) + 1) * 60 * 60)
+        except Exception as error:
+            bot.logger.error(error)
 
 
 # Rain notification subscription
@@ -287,11 +290,14 @@ def rain_notifications_send(bot, users):
           telegram.InlineKeyboardButton(HOURS_FORECAST_BUTTON, callback_data='weather-hourly')]]
     )
     for u_id in users:
-        rain_hours = json.loads(bot.user_get(u_id, 'weather:rain_hours'))
-        bot.telegram.send_message(
-            u_id, RAIN_SOON.render(hours=rain_hours),
-            reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN
-        )
+        try:
+            rain_hours = json.loads(bot.user_get(u_id, 'weather:rain_hours'))
+            bot.telegram.send_message(
+                u_id, RAIN_SOON.render(hours=rain_hours),
+                reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN
+            )
+        except Exception as error:
+            bot.logger.error(error)
 
 
 def get_weather(lat, lng):

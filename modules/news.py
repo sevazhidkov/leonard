@@ -132,12 +132,15 @@ def news_digest_check(bot):
 
 def news_digest_send(bot, users):
     for u_id in users:
-        key = 'user:{}:notifications:news:news-digest:sent'.format(u_id)
-        bot.redis.set(key, '1', ex=(len(NEWS_DIGEST_HOURS) + 1) * 60 * 60)
-        bot.telegram.send_message(u_id, 'Hey, your evening news digest is ready 📰')
-        m = FakeMessage()
-        m.u_id = u_id
-        send_news(m, bot)
+        try:
+            key = 'user:{}:notifications:news:news-digest:sent'.format(u_id)
+            bot.redis.set(key, '1', ex=(len(NEWS_DIGEST_HOURS) + 1) * 60 * 60)
+            bot.telegram.send_message(u_id, 'Hey, your evening news digest is ready 📰')
+            m = FakeMessage()
+            m.u_id = u_id
+            send_news(m, bot)
+        except Exception as error:
+            bot.logger.error(error)
 
 
 def espace_markdown_symbols(text):

@@ -45,10 +45,13 @@ def daily_meme_check(bot: Leonard):
 
 def daily_meme_send(bot: Leonard, users):
     for u_id in users:
-        key = 'user:{}:notifications:9gag:daily-meme:sent'.format(u_id)
-        bot.redis.set(key, '1', ex=(len(DAILY_MEME_HOURS) + 1) * 60 * 60)
-        bot.telegram.send_message(u_id, 'Here is your daily meme, my friend! 😆')
-        show_meme(None, bot, u_id)
+        try:
+            key = 'user:{}:notifications:9gag:daily-meme:sent'.format(u_id)
+            bot.redis.set(key, '1', ex=(len(DAILY_MEME_HOURS) + 1) * 60 * 60)
+            bot.telegram.send_message(u_id, 'Here is your daily meme, my friend! 😆')
+            show_meme(None, bot, u_id)
+        except Exception as error:
+            bot.logger.error(error)
 
 
 def show_meme(message, bot: Leonard, user_id=None):

@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 
@@ -13,11 +12,14 @@ bot.collect_plugins()
 
 def main():
     for subscription in bot.subscriptions:
-        subscription['send'](bot, subscription['check'](bot))
+        try:
+            subscription['send'](bot, subscription['check'](bot))
+        except Exception as error:
+            bot.logger.error(error)
 
 
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        logging.error(e)
+        bot.logger.error(e)

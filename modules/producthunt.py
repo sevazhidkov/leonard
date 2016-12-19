@@ -143,12 +143,15 @@ def daily_hunt_check(bot):
 
 def daily_hunt_send(bot, users):
     for u_id in users:
-        key = 'user:{}:notifications:producthunt:daily-hunt:sent'.format(u_id)
-        bot.redis.set(key, '1', ex=(len(DAILY_HUNT_HOURS) + 1) * 60 * 60)
-        bot.telegram.send_message(u_id, 'Hey! That\'s your Product Hunt digest ☕')
-        m = FakeMessage()
-        m.u_id = u_id
-        send_products(m, bot)
+        try:
+            key = 'user:{}:notifications:producthunt:daily-hunt:sent'.format(u_id)
+            bot.redis.set(key, '1', ex=(len(DAILY_HUNT_HOURS) + 1) * 60 * 60)
+            bot.telegram.send_message(u_id, 'Hey! That\'s your Product Hunt digest ☕')
+            m = FakeMessage()
+            m.u_id = u_id
+            send_products(m, bot)
+        except Exception as error:
+            bot.logger.error(error)
 
 
 def espace_markdown_symbols(text):
