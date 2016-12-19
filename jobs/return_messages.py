@@ -48,7 +48,7 @@ def main():
         elif not return_hour:
             # Choose hour for return message
             hour = random.choice(RETURN_MESSAGE_HOURS)
-            bot.user_set(u_id, 'return_hour', hour)
+            bot.user_set(u_id, 'return_hour', hour, ex=len(RETURN_MESSAGE_HOURS) * 60 * 60)
             if hour != time.hour:
                 continue
 
