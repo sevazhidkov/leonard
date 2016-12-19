@@ -176,8 +176,8 @@ def choose_product(message, bot):
     if place_id:
         request_data['start_place_id'] = place_id
     else:
-        request_data['start_latitude'] = user_location['lat']
-        request_data['start_longitude'] = user_location['long']
+        request_data['start_latitude'] = user_location['latitude']
+        request_data['start_longitude'] = user_location['latitude']
 
     place_id = bot.user_get(message.u_id, 'uber:destination:place_id')
     if place_id:
