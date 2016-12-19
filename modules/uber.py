@@ -193,8 +193,8 @@ def choose_product(message, bot):
     products = requests.get(PRODUCTS_URL, headers={
         'Authorization': 'Bearer {}'.format(token)
     }, params={
-        'latitude': user_location['lat'],
-        'longitude': user_location['long'],
+        'latitude': user_location['latitude'],
+        'longitude': user_location['longitude'],
     }).json()
 
     if not products['products']:
