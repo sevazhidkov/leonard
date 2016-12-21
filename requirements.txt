@@ -8,6 +8,7 @@ gunicorn
 tornado
 
 mapbox
+foursquare
 
 pytz
 
