@@ -1,7 +1,9 @@
+import os
 import time
 import requests
 import telegram
 import boto3
+from slacker import Slacker
 
 SEND_PHOTO = 'Send your photo 📷 and I will add beautiful filters to it\n⛲️ 🌃 🌄'
 WAIT_A_SECOND = 'Wait a second, neural networks are thinking 🕐'
@@ -36,6 +38,7 @@ def register(bot):
     bot.handlers['vinci-results-view'] = results_view
     bot.handlers['vinci-results-iteration'] = results_iteration
     bot.vinci_s3 = boto3.client('s3')
+    bot.vinci_slack = Slacker(os.environ['VINCI_SLACK_TOKEN'])
 
 
 def upload_image(message, bot):
@@ -84,6 +87,13 @@ def results_view(message, bot):
         Key='{}_{}.jpg'.format(file_id, message.u_id),
         Body=content
     )
+    bot.vinci_slack.chat.post_message('#vinci', text='', attachments=[{
+        'text': str(message.u_id),
+        'image_url': bot.vinci_s3.generate_presigned_url('get_object', Params={
+            'Bucket': 'leonard-vinci',
+            'Key': '{}_{}.jpg'.format(file_id, message.u_id)
+        })
+    }])
 
 
 def results_iteration(message, bot):

@@ -21,3 +21,4 @@ Pillow
 wolframalpha
 
 bugsnag
+slacker
