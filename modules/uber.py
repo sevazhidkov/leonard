@@ -5,6 +5,7 @@ import requests
 import telegram
 import tornado.web
 from bugsnag.tornado import BugsnagRequestHandler
+from slacker import Slacker
 
 from libs.shrt import short_user_link
 from libs.utils import build_bot, FakeMessage
@@ -95,6 +96,8 @@ def register(bot):
     oauth_redirect = bot.tornado.add_handlers(r'.*', [
         (r'/uber/redirect', UberRedirectHandler)
     ])
+
+    bot.uber_slack = Slacker(os.environ['UBER_SLACK_TOKEN'])
 
 
 def choose_current_location(message, bot):
@@ -251,6 +254,7 @@ def confirm_order(message, bot):
     bot.send_message(message.u_id, ORDER_CARD.render(data=response),
                      reply_markup=make_order_keyboard(bot, message.u_id, response),
                      parse_mode=telegram.ParseMode.MARKDOWN)
+    bot.uber_slack.chat.post_message('#leonard', text='User {} has successfully confirmed his Uber order'.format(message.u_id))
 
 
 def oauth_start(message, bot):
