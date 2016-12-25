@@ -254,7 +254,7 @@ def confirm_order(message, bot):
     bot.send_message(message.u_id, ORDER_CARD.render(data=response),
                      reply_markup=make_order_keyboard(bot, message.u_id, response),
                      parse_mode=telegram.ParseMode.MARKDOWN)
-    bot.uber_slack.chat.post_message('#uber', text='User {} has successfully confirmed his order'.format(message.u_id))
+    bot.uber_slack.chat.post_message('#leonard', text='User {} has successfully confirmed his Uber order'.format(message.u_id))
 
 
 def oauth_start(message, bot):
