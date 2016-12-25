@@ -25,13 +25,16 @@ def select_sentences(text, sentences):
 
 def make_query(message, bot):
     results = wiki.find(message.text)
-    bot.logger.info(results)
     if results:
         article = wiki.get_article(results[0])
+        if "may refer to" in article.summary:
+            if len(results)>1: article = wiki.get_article(results[1])
+            else: bot.send_message(message.u_id, "I'm sorry, I didn't find anything ☹️")
         summary = select_sentences(article.summary, 4)
         title = article.heading
         url = article.url
         keyboard = build_result_keyboard(url)
+
         if article.image: bot.telegram.send_photo(message.u_id, photo=article.image)
 
         bot.send_message(message.u_id, ARTICLE.render(title = title,
