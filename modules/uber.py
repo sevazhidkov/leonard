@@ -97,7 +97,7 @@ def register(bot):
         (r'/uber/redirect', UberRedirectHandler)
     ])
 
-    bot.uber_slack = Slacker(os.environ['UBER_SLACK_TOKEN'])
+    bot.uber_slack = Slacker(os.environ['SIREN_SLACK_TOKEN'])
 
 
 def choose_current_location(message, bot):

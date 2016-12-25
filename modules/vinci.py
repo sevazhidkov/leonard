@@ -38,7 +38,7 @@ def register(bot):
     bot.handlers['vinci-results-view'] = results_view
     bot.handlers['vinci-results-iteration'] = results_iteration
     bot.vinci_s3 = boto3.client('s3')
-    bot.vinci_slack = Slacker(os.environ['VINCI_SLACK_TOKEN'])
+    bot.vinci_slack = Slacker(os.environ['SIREN_SLACK_TOKEN'])
 
 
 def upload_image(message, bot):
