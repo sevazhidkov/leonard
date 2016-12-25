@@ -89,10 +89,7 @@ def results_view(message, bot):
     )
     bot.vinci_slack.chat.post_message('#vinci', text='', attachments=[{
         'text': str(message.u_id),
-        'image_url': bot.vinci_s3.generate_presigned_url('get_object', Params={
-            'Bucket': 'leonard-vinci',
-            'Key': '{}_{}.jpg'.format(file_id, message.u_id)
-        })
+        'image_url': photo.file_path
     }])
 
 
