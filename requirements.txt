@@ -21,3 +21,5 @@ Pillow
 wolframalpha
 
 bugsnag
+
+WikiApi

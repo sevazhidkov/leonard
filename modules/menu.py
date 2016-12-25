@@ -8,7 +8,8 @@ MENU = [[('handler', 'Venues ☕', 'foursquare-location-choice'),
          ('handler', 'Get Uber 🚘', 'uber-choose-location'),
          ('handler', 'Wolfram 📊', 'wolfram-ask')],
         [('handler', '9GAG 😅', 'meme-show'),
-        ('handler', 'Product Hunt 😺', 'producthunt-get-entry')],
+        ('handler', 'Product Hunt 😺', 'producthunt-get-entry'),
+        ('handler', 'Wikipedia 📚', 'wiki-search')],
         [('handler', 'Subscriptions 📬', 'subscriptions-show'),
          ('handler', 'Change location 🗺', 'location-new')]]
 
