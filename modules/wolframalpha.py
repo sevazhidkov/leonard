@@ -47,20 +47,20 @@ def wolfram_result(message, bot: Leonard):
                             caption=pod.title
                         )
                     except Exception:
-                        filename = 'temp/wolfram_{}.png'.format(message.u_id)
                         old = Image.open(io.BytesIO(requests.get(link).content)).convert('RGB')
                         new = ImageOps.expand(
                             old,
                             border=(0, int(old.size[0]/4)),
                             fill='white'
                         )
-                        new.save(filename)
+                        arr = io.BytesIO()
+                        new.save(arr, format='PNG')
+                        arr.seek(0)
                         bot.telegram.send_photo(
                             message.u_id,
-                            photo=open(filename, 'rb'),
+                            photo=io.BufferedReader(arr),
                             caption=pod.title
                         )
-                        os.remove(filename)
                         continue
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND)
