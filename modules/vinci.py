@@ -16,7 +16,17 @@ FILTERS_EMOJI = {
     'Milk': '🍼',
     'Girl': '👧🏽',
     'Ra': '🌅',
-    'Fire': '🔥'
+    'Fire': '🔥',
+    'Viva': '🌊',
+    'Binary': '⌨',
+    'Scndlnd': '♨️️',
+    'Mars': '💃',
+    'Fiberglass': '🌌',
+    'Ramayana': '🌉',
+    'Transverse': '⛲',
+    'Blood': '💊',
+    'Mystic': '💧',
+    'Times': '📰',
 }
 
 VINCI_PRELOAD = 'http://vinci.camera/preload'
