@@ -27,13 +27,16 @@ def make_query(message, bot):
     results = wiki.find(message.text)
     if results:
         article = wiki.get_article(results[0])
+        refer_url = ""
         if "may refer to" in article.summary:
-            if len(results)>1: article = wiki.get_article(results[1])
+            if len(results)>1:
+                refer_url = article.url
+                article = wiki.get_article(results[1])
             else: bot.send_message(message.u_id, "I'm sorry, I didn't find anything ☹️")
         summary = select_sentences(article.summary, 4)
         title = article.heading
         url = article.url
-        keyboard = build_result_keyboard(url)
+        keyboard = build_result_keyboard(url, refer_url)
 
         if article.image: bot.telegram.send_photo(message.u_id, photo=article.image)
 
@@ -46,7 +49,9 @@ def make_query(message, bot):
     bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
     bot.send_message(message.u_id, 'What do you want to know else? 🤓')
 
-def build_result_keyboard(article_url):
+def build_result_keyboard(article_url, refer_url):
     url_button = telegram.InlineKeyboardButton("Open article 🌐", url=article_url)
+    refer_button = telegram.InlineKeyboardButton("May refer to 📖", url=refer_url)
     keyboard = [[url_button]]
+    if refer_url: keyboard.append([refer_button])
     return telegram.InlineKeyboardMarkup(keyboard)
