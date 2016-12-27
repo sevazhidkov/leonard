@@ -1,10 +1,9 @@
 import os
-from urllib.parse import quote_plus
 
-import jinja2
+import io
+import requests
 import wolframalpha
-from telegram import InlineKeyboardButton
-from telegram import InlineKeyboardMarkup
+from PIL import Image, ImageOps
 
 from leonard import Leonard
 
@@ -37,11 +36,32 @@ def wolfram_result(message, bot: Leonard):
     exists = len(pods)
     if exists:
         for pod in pods[:-1]:
-            bot.telegram.send_photo(
-                message.u_id,
-                photo=next(next(pod.subpod).img).src,
-                caption=pod.title
-            )
+            for subpod in pod.subpod:
+                for img in subpod.img:
+                    link = None
+                    try:
+                        link = img.src
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=link,
+                            caption=pod.title
+                        )
+                    except Exception:
+                        filename = 'temp/wolfram_{}.png'.format(message.u_id)
+                        old = Image.open(io.BytesIO(requests.get(link).content)).convert('RGB')
+                        new = ImageOps.expand(
+                            old,
+                            border=(0, int(old.size[0]/4)),
+                            fill='white'
+                        )
+                        new.save(filename)
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=open(filename, 'rb'),
+                            caption=pod.title
+                        )
+                        os.remove(filename)
+                        continue
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND)
 
