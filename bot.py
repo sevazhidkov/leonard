@@ -49,6 +49,21 @@ class WebhookHandler(BugsnagRequestHandler):
         self.write('ok')
 
 
+class AllUsersHandler(BugsnagRequestHandler):
+    def __init__(self, application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+
+    def initialize(self, **kwargs):
+        self.bot = kwargs['bot']
+
+    def get(self):
+        result = []
+        for key in self.bot.redis.scan_iter(match='user:*:registered'):
+            result.append(int(key.decode('utf-8').split(':')[1]))
+
+        self.write(str(result))
+
+
 debug = False
 if 'BOT_DEBUG' in os.environ and os.environ['BOT_DEBUG'] == '1':
     debug = True
@@ -72,6 +87,9 @@ bot.tornado.add_handlers(r'.*', [
 ])
 bot.tornado.add_handlers(r'.*', [
     (r'/l/(.*)', shrt.GetLinkHandler)
+])
+bot.tornado.add_handlers(r'.*', [
+    (r'/all/{}'.format(quote_plus(os.environ['BOT_SECRET'])), AllUsersHandler, {'bot': bot})
 ])
 
 if len(sys.argv) > 1 and sys.argv[1] == 'polling':
