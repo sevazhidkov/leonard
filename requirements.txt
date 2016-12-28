@@ -22,4 +22,8 @@ wolframalpha
 Pillow
 
 bugsnag
+
+WikiApi
+wikipedia
+
 slacker
