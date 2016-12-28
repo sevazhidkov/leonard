@@ -6,6 +6,7 @@ import wolframalpha
 from PIL import Image, ImageOps
 
 from leonard import Leonard
+from libs.imageutils import fit_size
 
 UNKNOWN_COMMAND = 'Wolfram Alpha doesn\'t know anything about that 😢'
 
@@ -47,18 +48,9 @@ def wolfram_result(message, bot: Leonard):
                             caption=pod.title
                         )
                     except Exception:
-                        old = Image.open(io.BytesIO(requests.get(link).content)).convert('RGB')
-                        new = ImageOps.expand(
-                            old,
-                            border=(0, int(old.size[0]/4)),
-                            fill='white'
-                        )
-                        arr = io.BytesIO()
-                        new.save(arr, format='PNG')
-                        arr.seek(0)
                         bot.telegram.send_photo(
                             message.u_id,
-                            photo=io.BufferedReader(arr),
+                            photo=fit_size(link),
                             caption=pod.title
                         )
                         continue
