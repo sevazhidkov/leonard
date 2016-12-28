@@ -61,7 +61,7 @@ class AllUsersHandler(BugsnagRequestHandler):
         for key in self.bot.redis.scan_iter(match='user:*:registered'):
             result.append(int(key.decode('utf-8').split(':')[1]))
 
-        self.write({'users': result})
+        self.write(str(result))
 
 
 debug = False
