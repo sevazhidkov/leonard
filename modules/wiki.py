@@ -31,7 +31,7 @@ def make_query(message, bot):
         try:
             article = wikipedia.page(results[0])
             image = wiki.get_article(results[0]).image
-            summary = select_sentences(article.summary, 4)[:300]
+            summary = select_sentences(article.summary, 4)[:400]
             title = article.title
 
             if "may refer to" in summary: raise wikipedia.DisambiguationError(may_refer_to=results[1:], title=title)
@@ -51,7 +51,7 @@ def make_query(message, bot):
 
         except wikipedia.DisambiguationError as ex:
             keyboard = telegram.ReplyKeyboardMarkup([[result] for result in ex.options[: 4 if len(ex.options)-4 else -1]]+[["Back to the menu 🏠"]])
-            bot.send_message(message.u_id, 'This word has many meanings, select:', reply_markup = keyboard)
+            bot.send_message(message.u_id, 'This word has many meanings, select one 📔', reply_markup = keyboard)
 
         bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
     else: bot.send_message(message.u_id, "I'm sorry, I didn't find anything ☹️")
