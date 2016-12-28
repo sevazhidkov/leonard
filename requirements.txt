@@ -23,5 +23,6 @@ wolframalpha
 bugsnag
 
 WikiApi
+wikipedia
 
 slacker
