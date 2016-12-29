@@ -25,6 +25,7 @@ ASSIST_MESSAGES = ['By the way, if you have problems with me, you can write my d
 
 
 def main():
+    return
     for key in bot.redis.scan_iter(match='user:*:registered'):
         if bot.redis.get(key).decode('utf-8') != '1':
             # TODO: Add reminder about registration
