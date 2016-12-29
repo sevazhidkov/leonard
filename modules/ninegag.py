@@ -6,6 +6,7 @@ import pytz
 import boto3
 from boto3.dynamodb.conditions import Attr, AttributeNotExists
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+import jinja2
 
 from leonard import Leonard
 from libs.timezone import local_time
@@ -57,11 +58,12 @@ def daily_meme_send(bot: Leonard, users):
 def show_meme(message, bot: Leonard, user_id=None):
     if message:
         user_id = message.u_id
-    meme, title, img, post_id = get_meme(bot, user_id)
+    meme, title, img, post_id, points = get_meme(bot, user_id)
+    caption =  jinja2.Template("{{title}}{%if points%}\n({{points}} points){%endif%}").render(points=points, title=title)
     photos = bot.telegram.send_photo(
         user_id,
         photo=img,
-        caption=title,
+        caption=caption,
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
     )
 
@@ -88,4 +90,5 @@ def get_meme(bot: Leonard, user_id):
     )['Items'])
     return meme, meme['title'], \
            meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
-           meme['postId']
+           meme['postId'], \
+           meme["points"] if "points" in meme else 0
