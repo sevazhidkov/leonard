@@ -18,7 +18,10 @@ def main():
         title, post_id, img = item['title'], item['link'].split('/')[4], BeautifulSoup(
             item['summary'], 'lxml'
         ).find('img')
-        points = int(BeautifulSoup(requests.get(item["id"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text())
+        try:
+            points = BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text()
+        except Exception:
+            continue
 
         if not hasattr(img, 'src'):
             continue
