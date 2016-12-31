@@ -39,6 +39,7 @@ class Leonard:
         # and other updates
         self.handlers = {}
         self.callback_handlers = {}
+        self.callback_subscriptions = {}
 
         self.redis = from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
         self.bytes_fields = []
@@ -128,20 +129,28 @@ class Leonard:
     def process_callback_query(self, query):
         query.u_id = query.from_user.id
         query.message.u_id = query.from_user.id
+        data = query.data
 
-        handler_name = query.data.split("/")[0]
-        try:
-            tracker = self.callback_handlers[handler_name](query, self)
-        except Exception as error:
-            self.telegram.answerCallbackQuery(callback_query_id=query.id)
+        handler_name = query.data.split("/")
+        tracker = None
+        if len(handler_name) > 1:
+            handler_name = handler_name[0]
+            try:
+                tracker = self.callback_handlers[handler_name](query, self)
+            except Exception as error:
+                self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
-            if self.debug:
-                raise error
-            self.logger.error(error)
+                if self.debug:
+                    raise error
+                self.logger.error(error)
 
-            self.user_set(query.message.u_id, 'handler', self.default_handler)
+                self.user_set(query.message.u_id, 'handler', self.default_handler)
 
-            return
+                return
+        elif data.startswith('#'):
+            subscription_name = data[1:]
+            if subscription_name in self.callback_subscriptions:
+                tracker = self.callback_subscriptions[subscription_name][0]
 
         self.telegram.answerCallbackQuery(callback_query_id=query.id)
 
@@ -149,7 +158,10 @@ class Leonard:
         self.user_set(query.u_id, 'last_interaction', time.time())
 
         if tracker:
-            tracker.send()
+            if hasattr(tracker, 'send'):
+                tracker.send()
+            elif data.startswith('#'):
+                tracker(self.callback_subscriptions[subscription_name][1], query, self)
 
     def call_handler(self, message, name, **kwargs):
         self.user_set(message.u_id, 'handler', name)
