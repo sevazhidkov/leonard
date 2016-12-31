@@ -64,14 +64,15 @@ def show_meme(message, bot: Leonard, user_id=None):
     if message:
         user_id = message.u_id
     meme, title, img, post_id, points = get_meme(bot, user_id)
-    caption =  jinja2.Template("{{title}}{%if points%}\n({{points}} points){%endif%}").render(points=points, title=title)
-    photos = bot.telegram.send_photo(
-        user_id,
-        photo=img,
-        caption=caption,
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
-    )
-
+    try:
+        photos = bot.telegram.send_photo(
+            user_id,
+            photo=img,
+            caption=title,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
+        )
+    except Exception:
+        pass
     if bot.debug:
         file_id = False if 'file_id' not in meme or not meme['file_id'] else meme['file_id']
     else:
