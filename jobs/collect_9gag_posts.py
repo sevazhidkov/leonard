@@ -19,7 +19,7 @@ def main():
             item['summary'], 'lxml'
         ).find('img')
         try:
-            points = BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text()
+            points = int(BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text().replace(",",""))
         except Exception:
             continue
 

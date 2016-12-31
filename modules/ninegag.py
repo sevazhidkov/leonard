@@ -15,6 +15,11 @@ DAILY_MEME_HOURS = [10, 11, 12]
 
 dynamo = boto3.resource('dynamodb', 'eu-west-1')
 
+def sort_by_points(meme):
+    if "points" in meme:
+        return meme["points"]
+    else:
+        return 0
 
 def register(bot):
     bot.nine_gag = dynamo.Table('LeonardBot9gagPosts')
@@ -85,9 +90,9 @@ def show_meme(message, bot: Leonard, user_id=None):
 
 
 def get_meme(bot: Leonard, user_id):
-    meme = choice(bot.nine_gag.scan(
+    meme = sorted(bot.nine_gag.scan(
         FilterExpression=~Attr('viewed').contains(user_id)
-    )['Items'])
+    )['Items'], key = sort_by_points)[-1]
     return meme, meme['title'], \
            meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
            meme['postId'], \

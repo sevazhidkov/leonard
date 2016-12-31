@@ -14,10 +14,9 @@ def main():
     logging.info('{} memes to update'.format(response['Count']))
     for meme in response['Items']:
         try:
-            points = BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text()
+            points = int(BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text().replace(",",""))
         except Exception:
             continue
-        print(points)
         table.update_item(
              Key={
                  'postId': meme['postId']
