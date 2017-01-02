@@ -216,8 +216,8 @@ def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Show location ({}) 📍'.format(
-                    '{} m'.format(venue['m']) if venue['km'] < 1 else '{} km'.format(venue['km'])
+                [telegram.InlineKeyboardButton('Show location ({} to you) 📍'.format(
+                    '{}m'.format(venue['m']) if venue['km'] < 1 else '{}km'.format(venue['km'])
                 ), callback_data='foursquare-get-location')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
