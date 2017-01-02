@@ -131,10 +131,10 @@ class Leonard:
         query.message.u_id = query.from_user.id
         data = query.data
 
-        handler_name = query.data.split("/")
+        handler_name = query.data
         tracker = None
         if len(handler_name) > 1:
-            handler_name = handler_name[0]
+            handler_name = handler_name.split("/")[0]
             try:
                 tracker = self.callback_handlers[handler_name](query, self)
             except Exception as error:
