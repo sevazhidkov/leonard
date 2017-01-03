@@ -93,7 +93,7 @@ def register(bot):
     bot.handlers['uber-confirm-order'] = confirm_order
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
-    bot.callback_handlers["uber-inline"] = inline_set_end_location
+    bot.callback_handlers["uber-inline"] = inline_button
 
     oauth_redirect = bot.tornado.add_handlers(r'.*', [
         (r'/uber/redirect', UberRedirectHandler)
@@ -265,7 +265,7 @@ def confirm_order(message, bot):
                      parse_mode=telegram.ParseMode.MARKDOWN)
     bot.uber_slack.chat.post_message('#leonard', text='User {} has successfully confirmed his Uber order'.format(message.u_id))
 
-def inline_set_end_location(query, bot):
+def inline_button(query, bot):
     results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
     cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
     venue = results[cur_result]
