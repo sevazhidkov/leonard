@@ -170,7 +170,6 @@ def choose_product(message, bot):
         if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
             bot.call_handler(message, 'uber-choose-destination')
             return
-        bot.user_set(message.u_id, 'next_handler', 'uber-confirm-order')
 
         if message.location:
             bot.user_set(message.u_id, 'uber:destination:location', json.dumps({
@@ -179,6 +178,8 @@ def choose_product(message, bot):
             }))
         else:
             bot.user_set(message.u_id, 'uber:destination:place_id', PLACE_IDS[message.text])
+
+    bot.user_set(message.u_id, 'next_handler', 'uber-confirm-order')
 
     # Prepare request to Uber - we'll add product id later
     request_data = {}
