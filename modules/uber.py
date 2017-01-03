@@ -280,28 +280,6 @@ def inline_set_end_location(query, bot):
     bot.call_handler(query, "uber-choose-location")
 
 
-def inline_choose_current_location(message, bot):
-    if (not message.location and
-            (message.text not in [HOME_BUTTON, WORK_BUTTON] and '📦' not in message.text)):
-        bot.call_handler(message, 'uber-choose-location')
-        return
-    bot.user_set(message.u_id, 'next_handler', 'uber-choose-product')
-    keyboard = [[HOME_BUTTON, WORK_BUTTON],
-                [bot.MENU_BUTTON]]
-    if message.location:
-        bot.user_set(message.u_id, 'uber:location:location', json.dumps({
-            'latitude': message.location['latitude'],
-            'longitude': message.location['longitude']
-        }))
-    elif message.text in [HOME_BUTTON, WORK_BUTTON]:
-        bot.user_set(message.u_id, 'uber:location:place_id',
-                     PLACE_IDS[message.text])
-        keyboard[0].remove(message.text)
-
-    bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
-                              reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
-
-
 def oauth_start(message, bot):
     keyboard = telegram.InlineKeyboardMarkup([
         [telegram.InlineKeyboardButton(
