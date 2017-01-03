@@ -108,7 +108,6 @@ def choose_current_location(message, bot):
         return
 
     bot.user_set(message.u_id, 'next_handler', 'uber-choose-destination')
-
     bot.telegram.sendChatAction(message.u_id, 'typing')
 
     token = bot.user_get(message.u_id, 'uber:access_token')
@@ -135,9 +134,9 @@ def choose_current_location(message, bot):
 
     bot.user_set(message.u_id, 'uber:location:place_id', '')
     bot.user_set(message.u_id, 'uber:location:location', '')
+    bot.user_set(message.u_id, 'uber:destination:place_id', '')
     if "uber-inline" not in message.text:
         bot.user_set(message.u_id, 'uber:destination:location', '')
-        bot.user_set(message.u_id, 'uber:destination:place_id', '')
 
 
 def choose_destination(message, bot):
@@ -159,17 +158,15 @@ def choose_destination(message, bot):
                      PLACE_IDS[message.text])
         keyboard[0].remove(message.text)
 
-    place = bot.user_get(message.u_id, 'uber:destination:place_id')
     location = bot.user_get(message.u_id, 'uber:destination:location')
-    if not place and not location:
+    if not location:
         bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
 
 def choose_product(message, bot):
-    place = bot.user_get(message.u_id, 'uber:destination:place_id')
     location = bot.user_get(message.u_id, 'uber:destination:location')
-    if not place and not location:
+    if not location:
         if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
             bot.call_handler(message, 'uber-choose-destination')
             return
