@@ -106,9 +106,9 @@ def choose_current_location(message, bot):
     if bot.user_get(message.u_id, 'uber:authorized') != '1':
         bot.call_handler(message, 'uber-oauth-start')
         return
-    
+      
     bot.user_set(message.u_id, 'next_handler', 'uber-choose-destination')
-    
+  
     bot.telegram.sendChatAction(message.u_id, 'typing')
 
     token = bot.user_get(message.u_id, 'uber:access_token')
@@ -145,7 +145,7 @@ def choose_destination(message, bot):
             (message.text not in [HOME_BUTTON, WORK_BUTTON] and '📦' not in message.text)):
         bot.call_handler(message, 'uber-choose-location')
         return
-    
+      
     bot.user_set(message.u_id, 'next_handler', 'uber-choose-product')
     keyboard = [[HOME_BUTTON, WORK_BUTTON],
                 [bot.MENU_BUTTON]]
@@ -159,13 +159,17 @@ def choose_destination(message, bot):
                      PLACE_IDS[message.text])
         keyboard[0].remove(message.text)
 
-    if "uber-inline" not in message.text:    
+    place = bot.user_get(message.u_id, 'uber:destination:place_id')
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not place or not location:
         bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
 
 def choose_product(message, bot):
-    if "uber-inline" not in message.text:
+    place = bot.user_get(message.u_id, 'uber:destination:place_id')
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not place or not location:
         if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
             bot.call_handler(message, 'uber-choose-destination')
             return
@@ -296,7 +300,7 @@ def inline_choose_current_location(message, bot):
 
     bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
-    
+
 
 def oauth_start(message, bot):
     keyboard = telegram.InlineKeyboardMarkup([
