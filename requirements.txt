@@ -9,6 +9,7 @@ tornado
 
 mapbox
 foursquare
+geopy
 
 pytz
 
