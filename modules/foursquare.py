@@ -33,6 +33,7 @@ def register(bot):
     bot.callback_handlers['foursquare-previous'] = previous_result_callback
     bot.callback_handlers['foursquare-next'] = next_result_callback
     bot.callback_handlers['foursquare-get-location'] = get_location_callback
+    bot.callback_handlers['foursquare-get-uber'] = get_uber
 
 
 def location_choice(message, bot):
@@ -136,7 +137,6 @@ def get_location_callback(query, bot):
         )
     except telegram.error.BadRequest:
         pass
-
     bot.telegram.send_location(
         chat_id=query.message.chat_id,
         longitude=venue['location']['long'],
@@ -201,12 +201,16 @@ def round_rating(value):
     else:
         return int(value)
 
+def get_uber(query, bot):
+    if bot.user_get(query.u_id, 'uber:authorized') != '1':
+        bot.call_handler(query, 'uber-oauth-start')
 
 def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location')],
+                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location'),
+                telegram.InlineKeyboardButton('Get Uber 🚘 ', callback_data='uber-inline')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
         keyboard[0].append(back_button)
