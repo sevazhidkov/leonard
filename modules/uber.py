@@ -159,13 +159,17 @@ def choose_destination(message, bot):
                      PLACE_IDS[message.text])
         keyboard[0].remove(message.text)
 
-    if not bot.user_get(message.u_id, 'uber:destination:place_id') or not bot.user_get(message.u_id, 'uber:destination:location'):
+    place = bot.user_get(message.u_id, 'uber:destination:place_id')
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not place or not location:
         bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
 
 def choose_product(message, bot):
-    if not bot.user_get(message.u_id, 'uber:destination:place_id') or not bot.user_get(message.u_id, 'uber:destination:location'):
+    place = bot.user_get(message.u_id, 'uber:destination:place_id')
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not place or not location:
         if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
             bot.call_handler(message, 'uber-choose-destination')
             return
