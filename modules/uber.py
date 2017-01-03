@@ -162,6 +162,8 @@ def choose_destination(message, bot):
     if not location:
         bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+    else:
+        bot.call_handler(message, "uber-choose-product")
 
 
 def choose_product(message, bot):
@@ -272,8 +274,8 @@ def inline_button(query, bot):
     venue = results[cur_result]
 
     bot.user_set(query.u_id, 'uber:destination:location', json.dumps({
-            'latitude': venue['location']['long'],
-            'longitude': venue['location']['lat']
+            'latitude': venue['location']['lat'],
+            'longitude': venue['location']['long']
     }))
     bot.call_handler(query, "uber-choose-location")
 
