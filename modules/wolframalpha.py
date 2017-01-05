@@ -54,8 +54,15 @@ def wolfram_result(message, bot: Leonard):
                             caption=pod.title
                         )
                         continue
+        for result in response.results:
+            bot.telegram.send_message(
+                message.u_id,
+                text=result.text
+            )
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND)
+
+
 
     bot.user_set(message.u_id, 'next_handler', 'wolfram-result')
     bot.send_message(message.u_id, 'What do you want to calculate or know else? 🤔')
