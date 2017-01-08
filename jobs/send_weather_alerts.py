@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import datetime
 
 import requests
 import telegram
@@ -15,6 +16,8 @@ ENDPOINT_URL = 'https://api.darksky.net/forecast/{}'.format(os.environ['DARKSKY_
 
 
 def main():
+    if datetime.datetime.now().hour % 6 != 0:
+        return
     for key in bot.redis.scan_iter(match='user:*[0-9]:location'):
         user_id = key.decode('utf-8').split(':')[1]
         location = json.loads(bot.user_get(user_id, 'location'))
