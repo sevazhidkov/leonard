@@ -72,7 +72,6 @@ def subscriptions_setup_result(message, bot: Leonard):
 
 
 def show_subscriptions(message, bot: Leonard):
-    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
     keyboard = build_subscribes_keyboard(message, bot)
     bot.telegram.send_message(
         message.u_id,
@@ -80,6 +79,7 @@ def show_subscriptions(message, bot: Leonard):
         "Look what I can offer you. 🙂",
         reply_markup=telegram.ReplyKeyboardMarkup(keyboard)
     )
+    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
 
 def set_subscription_by_name(active_subscription, query, bot: Leonard):
     key = 'notifications:{}:{}'.format(active_subscription['plugin'], active_subscription['name'])
