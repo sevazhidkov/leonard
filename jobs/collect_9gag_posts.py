@@ -20,7 +20,8 @@ def main():
         ).find('img')
         try:
             points = int(BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text().replace(",",""))
-        except Exception:
+        except Exception as error:
+            print(error)
             continue
 
         if not hasattr(img, 'src'):
