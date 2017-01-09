@@ -19,8 +19,9 @@ def main():
             item['summary'], 'lxml'
         ).find('img')
         try:
-            points = int(BeautifulSoup(requests.get("http://9gag.com/gag/"+meme["postId"]).text).find('span', {'class' : 'badge-item-love-count'}).get_text().replace(",",""))
-        except Exception:
+            points = int(BeautifulSoup(requests.get("http://9gag.com/gag/"+post_id).text).find('span', {'class' : 'badge-item-love-count'}).get_text().replace(",",""))
+        except Exception as error:
+            print(error)
             continue
 
         if not hasattr(img, 'src'):
@@ -40,7 +41,7 @@ def main():
                 'img': img,
                 'createdAt': int(time.time()),
                 'viewed': {-1},
-                'file_id': False
+                'file_id': False,
                 'points' : points
             }
         )
