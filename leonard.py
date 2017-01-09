@@ -17,6 +17,7 @@ from telegram.message import Message
 from modules.location import set_location
 from modules.menu import get_keyboard
 from libs.analytics import track_message
+from system.slackhandler import SlackHandler
 
 logger = logging.getLogger('leonard')
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -45,7 +46,10 @@ class Leonard:
         self.bytes_fields = []
 
         self.logger = logger
-        self.logger.addHandler(BugsnagHandler())
+        # self.logger.addHandler(BugsnagHandler())
+        slack_handler = SlackHandler(os.environ['SIREN_SLACK_TOKEN'])
+        slack_handler.setLevel(logging.ERROR)
+        self.logger.addHandler(slack_handler)
         self.logger.setLevel(logging.INFO)
 
         self.subscriptions = []
