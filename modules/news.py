@@ -124,7 +124,7 @@ def news_digest_check(bot):
 
         time = local_time(bot, int(user_id))
 
-        if time.hour in NEWS_DIGEST_HOURS:
+        if time and time.hour in NEWS_DIGEST_HOURS:
             result.append(int(user_id))
 
     return result
