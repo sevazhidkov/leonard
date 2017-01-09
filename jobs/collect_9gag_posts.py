@@ -40,7 +40,7 @@ def main():
                 'img': img,
                 'createdAt': int(time.time()),
                 'viewed': {-1},
-                'file_id': False
+                'file_id': False,
                 'points' : points
             }
         )
