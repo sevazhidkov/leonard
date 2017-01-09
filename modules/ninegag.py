@@ -41,9 +41,11 @@ def daily_meme_check(bot: Leonard):
             continue
         _, user_id, _, _, _ = key.split(':')
 
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
-        if time.hour in DAILY_MEME_HOURS:
+        if time and time.hour in DAILY_MEME_HOURS:
             result.append(int(user_id))
 
     return result

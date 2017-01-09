@@ -215,6 +215,8 @@ def morning_forecast_check(bot):
             continue
         _, user_id, _, _, _ = key.split(':')
 
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
         if time and time.hour in MORNING_FORECAST_HOURS:
@@ -249,6 +251,9 @@ def rain_notifications_check(bot):
             continue
 
         _, user_id, _, _, _ = key.split(':')
+
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
         if not time or time.hour not in RAIN_NOTIFICATIONS_HOURS:
