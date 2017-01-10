@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*- ?
 import os
 import json
@@ -133,9 +134,11 @@ def daily_hunt_check(bot):
             continue
         _, user_id, _, _, _ = key.split(':')
 
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
-        if time.hour in DAILY_HUNT_HOURS:
+        if time and time.hour in DAILY_HUNT_HOURS:
             result.append(int(user_id))
 
     return result
