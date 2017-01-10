@@ -8,7 +8,6 @@ bot.collect_plugins()
 
 
 def main():
-    a = 100/0
     count = 0
     for key in bot.redis.scan_iter(match='user:*:registered'):
         count += 1
