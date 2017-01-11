@@ -16,7 +16,17 @@ FILTERS_EMOJI = {
     'Milk': '🍼',
     'Girl': '👧🏽',
     'Ra': '🌅',
-    'Fire': '🔥'
+    'Fire': '🔥',
+    'Viva': '🌊',
+    'Binary': '⌨',
+    'Scndlnd': '♨️️',
+    'Mars': '💃',
+    'Fiberglass': '🌌',
+    'Ramayana': '🌉',
+    'Transverse': '⛲',
+    'Blood': '💊',
+    'Mystic': '💧',
+    'Times': '📰',
 }
 
 VINCI_PRELOAD = 'http://vinci.camera/preload'
@@ -38,7 +48,7 @@ def register(bot):
     bot.handlers['vinci-results-view'] = results_view
     bot.handlers['vinci-results-iteration'] = results_iteration
     bot.vinci_s3 = boto3.client('s3')
-    bot.vinci_slack = Slacker(os.environ['VINCI_SLACK_TOKEN'])
+    bot.vinci_slack = Slacker(os.environ['SIREN_SLACK_TOKEN'])
 
 
 def upload_image(message, bot):
@@ -89,10 +99,7 @@ def results_view(message, bot):
     )
     bot.vinci_slack.chat.post_message('#vinci', text='', attachments=[{
         'text': str(message.u_id),
-        'image_url': bot.vinci_s3.generate_presigned_url('get_object', Params={
-            'Bucket': 'leonard-vinci',
-            'Key': '{}_{}.jpg'.format(file_id, message.u_id)
-        })
+        'image_url': photo.file_path
     }])
 
 

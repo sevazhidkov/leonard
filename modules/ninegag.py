@@ -6,6 +6,7 @@ import pytz
 import boto3
 from boto3.dynamodb.conditions import Attr, AttributeNotExists
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+import jinja2
 
 from leonard import Leonard
 from libs.timezone import local_time
@@ -14,6 +15,11 @@ DAILY_MEME_HOURS = [10, 11, 12]
 
 dynamo = boto3.resource('dynamodb', 'eu-west-1')
 
+def sort_by_points(meme):
+    if "points" in meme:
+        return meme["points"]
+    else:
+        return 0
 
 def register(bot):
     bot.nine_gag = dynamo.Table('LeonardBot9gagPosts')
@@ -35,9 +41,11 @@ def daily_meme_check(bot: Leonard):
             continue
         _, user_id, _, _, _ = key.split(':')
 
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
-        if time.hour in DAILY_MEME_HOURS:
+        if time and time.hour in DAILY_MEME_HOURS:
             result.append(int(user_id))
 
     return result
@@ -57,14 +65,16 @@ def daily_meme_send(bot: Leonard, users):
 def show_meme(message, bot: Leonard, user_id=None):
     if message:
         user_id = message.u_id
-    meme, title, img, post_id = get_meme(bot, user_id)
-    photos = bot.telegram.send_photo(
-        user_id,
-        photo=img,
-        caption=title,
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
-    )
-
+    meme, title, img, post_id, points = get_meme(bot, user_id)
+    try:
+        photos = bot.telegram.send_photo(
+            user_id,
+            photo=img,
+            caption=title,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Open on 9GAG', url='9gag.com/gag/' + post_id)]])
+        )
+    except Exception:
+        pass
     if bot.debug:
         file_id = False if 'file_id' not in meme or not meme['file_id'] else meme['file_id']
     else:
@@ -83,9 +93,10 @@ def show_meme(message, bot: Leonard, user_id=None):
 
 
 def get_meme(bot: Leonard, user_id):
-    meme = choice(bot.nine_gag.scan(
+    meme = sorted(bot.nine_gag.scan(
         FilterExpression=~Attr('viewed').contains(user_id)
-    )['Items'])
+    )['Items'], key = sort_by_points)[-1]
     return meme, meme['title'], \
            meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
-           meme['postId']
+           meme['postId'], \
+           meme["points"] if "points" in meme else 0

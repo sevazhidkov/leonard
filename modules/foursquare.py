@@ -1,5 +1,7 @@
 import os
 import json
+from geopy.distance import vincenty as _distance
+
 import jinja2
 import telegram
 import foursquare
@@ -11,10 +13,13 @@ SEND_YOUR_QUERY = ("Cool 👍 Tell me, where do you want to go? ☕ 🍝 🍟\n\
                    "You can send your own query or use one of our variants 👇")
 NOT_FOUND = "I'm sorry, but there is nothing to show you for now 😁"
 WAIT_A_SECOND = 'Wait a second, please, I\'m searching cool venue on the Foursquare 🕐'
-SEARCH_RESULT = jinja2.Template("*{{ venue.name }}*{% if venue.location.address %}, _{{ venue.location.address }}_"
-                                "{% endif %}\n\n{% for reason in venue.reasons %}— {{ reason }}{% endfor %}\n\n"
+SEARCH_RESULT = jinja2.Template("*{{ venue.name }}*"
+                                "{% if venue.location.address %}, _{{ venue.location.address }}_{% endif %}\n"
+                                "*{{distance}} to you*\n\n"
+                                "{% for reason in venue.reasons %}— {{ reason }}{% endfor %}\n\n"
                                 "{% if venue.rating %}{{'⭐️' * venue.rating}}\n"
-                                "{% endif %}{{ '💲' * venue.price_tier }}\n\n{{ venue.url }}")
+                                "{% endif %}{{ '💲' * venue.price_tier }}\n\n"
+                                "{{ venue.url }}")
 
 CATEGORY_EMOJI = {
     'Café': '🍝'
@@ -33,6 +38,7 @@ def register(bot):
     bot.callback_handlers['foursquare-previous'] = previous_result_callback
     bot.callback_handlers['foursquare-next'] = next_result_callback
     bot.callback_handlers['foursquare-get-location'] = get_location_callback
+    bot.callback_handlers['foursquare-get-uber'] = get_uber
 
 
 def location_choice(message, bot):
@@ -95,6 +101,12 @@ def search_results(message, bot):
             'long': item['venue']['location']['lng'],
             'address': item['venue']['location'].get('address', '')
         }
+        distance = _distance(
+            (venue['location']['lat'], venue['location']['long']),
+            (location['lat'], location['long'])
+        )
+        venue['km'] = round(distance.km, 1)
+        venue['m'] = round(distance.m)
 
         venue['rating'] = 0
         if 'rating' in item['venue']:
@@ -114,7 +126,8 @@ def search_results(message, bot):
     bot.telegram.send_message(
         message.u_id,
         SEARCH_RESULT.render(
-            venue=results[0]
+            venue=results[0],
+            distance = '{}m'.format(venue['m']) if venue['km'] < 1 else '{}km'.format(venue['km'])
         ),
         reply_markup=reply_markup, parse_mode=telegram.ParseMode.MARKDOWN,
         disable_web_page_preview=True
@@ -136,7 +149,6 @@ def get_location_callback(query, bot):
         )
     except telegram.error.BadRequest:
         pass
-
     bot.telegram.send_location(
         chat_id=query.message.chat_id,
         longitude=venue['location']['long'],
@@ -146,7 +158,8 @@ def get_location_callback(query, bot):
     reply_markup = build_result_keyboard(results[cur_result], cur_result, len(results) - 1)
     bot.telegram.send_message(
         query.u_id,
-        SEARCH_RESULT.render(venue=results[cur_result]),
+        SEARCH_RESULT.render(venue=results[cur_result],
+                            distance = '{}m'.format(venue['m']) if venue['km'] < 1 else '{}km'.format(venue['km'])),
         reply_markup=reply_markup,
         parse_mode=telegram.ParseMode.MARKDOWN,
         disable_web_page_preview=True
@@ -181,7 +194,8 @@ def next_result_callback(query, bot):
 
 def edit_current_result(venue, cur_result, query, results, bot):
     bot.telegram.editMessageText(
-        text=SEARCH_RESULT.render(venue=venue),
+        text=SEARCH_RESULT.render(venue=venue,
+                                 distance = '{}m'.format(venue['m']) if venue['km'] < 1 else '{}km'.format(venue['km'])),
         parse_mode=telegram.ParseMode.MARKDOWN,
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
@@ -201,12 +215,16 @@ def round_rating(value):
     else:
         return int(value)
 
+def get_uber(query, bot):
+    if bot.user_get(query.u_id, 'uber:authorized') != '1':
+        bot.call_handler(query, 'uber-oauth-start')
 
 def build_result_keyboard(venue, num=0, last_num=1):
     back_button = telegram.InlineKeyboardButton('⏮ Back', callback_data='foursquare-previous')
     next_button = telegram.InlineKeyboardButton('Next ⏭', callback_data='foursquare-next')
     keyboard = [[],
-                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location')],
+                [telegram.InlineKeyboardButton('Show location 📍', callback_data='foursquare-get-location'),
+                telegram.InlineKeyboardButton('Get Uber 🚘 ', callback_data='uber-inline')],
                 [telegram.InlineKeyboardButton('Open on Foursquare 🌐', url=venue['url'])]]
     if num != 0:
         keyboard[0].append(back_button)

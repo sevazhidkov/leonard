@@ -1,12 +1,12 @@
 import os
-from urllib.parse import quote_plus
 
-import jinja2
+import io
+import requests
 import wolframalpha
-from telegram import InlineKeyboardButton
-from telegram import InlineKeyboardMarkup
+from PIL import Image, ImageOps
 
 from leonard import Leonard
+from libs.imageutils import fit_size
 
 UNKNOWN_COMMAND = 'Wolfram Alpha doesn\'t know anything about that 😢'
 
@@ -37,13 +37,32 @@ def wolfram_result(message, bot: Leonard):
     exists = len(pods)
     if exists:
         for pod in pods[:-1]:
-            bot.telegram.send_photo(
+            for subpod in pod.subpod:
+                for img in subpod.img:
+                    link = None
+                    try:
+                        link = img.src
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=link,
+                            caption=pod.title
+                        )
+                    except Exception:
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=fit_size(link),
+                            caption=pod.title
+                        )
+                        continue
+        for result in response.results:
+            bot.telegram.send_message(
                 message.u_id,
-                photo=next(next(pod.subpod).img).src,
-                caption=pod.title
+                text=result.text
             )
     else:
         bot.telegram.send_message(message.u_id, UNKNOWN_COMMAND)
+
+
 
     bot.user_set(message.u_id, 'next_handler', 'wolfram-result')
     bot.send_message(message.u_id, 'What do you want to calculate or know else? 🤔')

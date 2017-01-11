@@ -122,9 +122,11 @@ def news_digest_check(bot):
             continue
         _, user_id, _, _, _ = key.split(':')
 
+        if not bot.user_get(user_id, "location"): continue
+
         time = local_time(bot, int(user_id))
 
-        if time.hour in NEWS_DIGEST_HOURS:
+        if time and time.hour in NEWS_DIGEST_HOURS:
             result.append(int(user_id))
 
     return result

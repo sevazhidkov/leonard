@@ -30,6 +30,8 @@ def register(bot: Leonard):
     bot.handlers['subscriptions-show'] = show_subscriptions
     bot.handlers['subscription-set'] = set_subscription
 
+    bot.callback_subscriptions['9gag-subscribe'] = (set_subscription_by_name, [y for x in SUBSCRIBES_MENU for y in x if y['plugin'] == '9gag'][0])
+
 
 # REGISTRATION HANDLERS
 
@@ -70,7 +72,6 @@ def subscriptions_setup_result(message, bot: Leonard):
 
 
 def show_subscriptions(message, bot: Leonard):
-    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
     keyboard = build_subscribes_keyboard(message, bot)
     bot.telegram.send_message(
         message.u_id,
@@ -78,7 +79,14 @@ def show_subscriptions(message, bot: Leonard):
         "Look what I can offer you. 🙂",
         reply_markup=telegram.ReplyKeyboardMarkup(keyboard)
     )
+    bot.user_set(message.u_id, 'next_handler', 'subscription-set')
 
+def set_subscription_by_name(active_subscription, query, bot: Leonard):
+    key = 'notifications:{}:{}'.format(active_subscription['plugin'], active_subscription['name'])
+    bot.user_set(query.u_id, key, '1')
+    reply_text = active_subscription.get('on_add', DEFAULT_SUBSCRIBE_TEXT)
+    bot.telegram.send_message(query.u_id, reply_text)
+    bot.telegram.editMessageReplyMarkup(chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=None)
 
 def set_subscription(message, bot: Leonard):
     bot.user_set(message.u_id, 'next_handler', 'subscription-set')

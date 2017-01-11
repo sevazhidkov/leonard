@@ -12,6 +12,7 @@ from libs.utils import build_bot, FakeMessage
 
 from modules.location import set_location
 
+
 OAUTH_START_INVITE_FIRST = "Oh, it looks like you didn't connect your Uber account 🤔"
 OAUTH_START_INVITE_SECOND = ("Don't worry, it's easy and you should do it only once.\n"
                              "Just click button below and go through Uber authorization ✅")
@@ -92,18 +93,20 @@ def register(bot):
     bot.handlers['uber-confirm-order'] = confirm_order
 
     bot.callback_handlers['uber-cancel-order'] = cancel_order
+    bot.callback_handlers["uber-inline"] = inline_button
 
     oauth_redirect = bot.tornado.add_handlers(r'.*', [
         (r'/uber/redirect', UberRedirectHandler)
     ])
 
-    bot.uber_slack = Slacker(os.environ['UBER_SLACK_TOKEN'])
+    bot.uber_slack = Slacker(os.environ['SIREN_SLACK_TOKEN'])
 
 
 def choose_current_location(message, bot):
     if bot.user_get(message.u_id, 'uber:authorized') != '1':
         bot.call_handler(message, 'uber-oauth-start')
         return
+
     bot.user_set(message.u_id, 'next_handler', 'uber-choose-destination')
     bot.telegram.sendChatAction(message.u_id, 'typing')
 
@@ -131,8 +134,9 @@ def choose_current_location(message, bot):
 
     bot.user_set(message.u_id, 'uber:location:place_id', '')
     bot.user_set(message.u_id, 'uber:location:location', '')
-    bot.user_set(message.u_id, 'uber:destination:location', '')
     bot.user_set(message.u_id, 'uber:destination:place_id', '')
+    if "uber-inline" not in message.text:
+        bot.user_set(message.u_id, 'uber:destination:location', '')
 
 
 def choose_destination(message, bot):
@@ -140,6 +144,7 @@ def choose_destination(message, bot):
             (message.text not in [HOME_BUTTON, WORK_BUTTON] and '📦' not in message.text)):
         bot.call_handler(message, 'uber-choose-location')
         return
+
     bot.user_set(message.u_id, 'next_handler', 'uber-choose-product')
     keyboard = [[HOME_BUTTON, WORK_BUTTON],
                 [bot.MENU_BUTTON]]
@@ -153,23 +158,30 @@ def choose_destination(message, bot):
                      PLACE_IDS[message.text])
         keyboard[0].remove(message.text)
 
-    bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not location:
+        bot.telegram.send_message(message.u_id, CHOOSE_YOUR_DESTINATION,
                               reply_markup=telegram.ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+    else:
+        bot.call_handler(message, "uber-choose-product")
 
 
 def choose_product(message, bot):
-    if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
-        bot.call_handler(message, 'uber-choose-destination')
-        return
-    bot.user_set(message.u_id, 'next_handler', 'uber-confirm-order')
+    location = bot.user_get(message.u_id, 'uber:destination:location')
+    if not location:
+        if not message.location and message.text not in [HOME_BUTTON, WORK_BUTTON]:
+            bot.call_handler(message, 'uber-choose-destination')
+            return
 
-    if message.location:
-        bot.user_set(message.u_id, 'uber:destination:location', json.dumps({
-            'latitude': message.location['latitude'],
-            'longitude': message.location['longitude']
-        }))
-    else:
-        bot.user_set(message.u_id, 'uber:destination:place_id', PLACE_IDS[message.text])
+        if message.location:
+            bot.user_set(message.u_id, 'uber:destination:location', json.dumps({
+                'latitude': message.location['latitude'],
+                'longitude': message.location['longitude']
+            }))
+        else:
+            bot.user_set(message.u_id, 'uber:destination:place_id', PLACE_IDS[message.text])
+
+    bot.user_set(message.u_id, 'next_handler', 'uber-confirm-order')
 
     # Prepare request to Uber - we'll add product id later
     request_data = {}
@@ -255,6 +267,17 @@ def confirm_order(message, bot):
                      reply_markup=make_order_keyboard(bot, message.u_id, response),
                      parse_mode=telegram.ParseMode.MARKDOWN)
     bot.uber_slack.chat.post_message('#leonard', text='User {} has successfully confirmed his Uber order'.format(message.u_id))
+
+def inline_button(query, bot):
+    results = json.loads(bot.user_get(query.u_id, 'foursquare:results'))
+    cur_result = int(bot.user_get(query.u_id, 'foursquare:results:current'))
+    venue = results[cur_result]
+
+    bot.user_set(query.u_id, 'uber:destination:location', json.dumps({
+            'latitude': venue['location']['lat'],
+            'longitude': venue['location']['long']
+    }))
+    bot.call_handler(query, "uber-choose-location")
 
 
 def oauth_start(message, bot):

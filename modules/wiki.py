@@ -1,7 +1,12 @@
+import io
+from PIL import Image, ImageOps
 from wikiapi import WikiApi
 import wikipedia
 import jinja2
 import telegram
+import requests
+
+from libs.imageutils import fit_size
 
 wiki = WikiApi({'locale': 'en'})
 
@@ -29,7 +34,10 @@ def select_sentences(text, sentences):
 
 
 def make_query(message, bot):
-    results = wikipedia.search(message.text)
+    try:
+        results = wikipedia.search(message.text)
+    except requests.exceptions.InvalidURL:
+        results = False
     if results:
         try:
             article = wikipedia.page(results[0])
@@ -37,12 +45,20 @@ def make_query(message, bot):
             summary = select_sentences(article.summary, 4)[:400]
             title = article.title
 
-            if "may refer to" in summary: raise wikipedia.DisambiguationError(may_refer_to=results[1:], title=title)
+            if 'may refer to' in summary:
+                raise wikipedia.DisambiguationError(may_refer_to=results[1:], title=title)
 
             url = article.url
             keyboard = build_result_keyboard(url)
 
-            if image: bot.telegram.send_photo(message.u_id, photo=image)
+            if image:
+                try:
+                    bot.telegram.send_photo(message.u_id, photo=image)
+                except Exception:
+                    bot.telegram.send_photo(
+                        message.u_id,
+                        photo=fit_size(image)
+                    )
 
             bot.send_message(message.u_id,
                              ARTICLE.render(title=title, article=summary),
@@ -55,11 +71,10 @@ def make_query(message, bot):
             keyboard = telegram.ReplyKeyboardMarkup(
                 [[result] for result in ex.options[: 4 if len(ex.options) - 4 else -1]] + [["Back to the menu 🏠"]])
             bot.send_message(message.u_id, 'This word has many meanings, select one 📔', reply_markup=keyboard)
-
-        bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
     else:
         bot.send_message(message.u_id, "I'm sorry, I didn't find anything ☹️")
-
+        bot.send_message(message.u_id, 'What do you want to know else? 🤓')
+    bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
 
 def build_result_keyboard(article_url):
     url_button = telegram.InlineKeyboardButton("Open article 🌐", url=article_url)
