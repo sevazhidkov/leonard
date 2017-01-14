@@ -1,14 +1,12 @@
 import io
 from PIL import Image, ImageOps
-from wikiapi import WikiApi
+from bs4 import BeautifulSoup
 import wikipedia
 import jinja2
 import telegram
 import requests
 
 from libs.imageutils import fit_size
-
-wiki = WikiApi({'locale': 'en'})
 
 ARTICLE = jinja2.Template("*{{title}}*\n{{article}}")
 
@@ -41,7 +39,7 @@ def make_query(message, bot):
     if results:
         try:
             article = wikipedia.page(results[0])
-            image = wiki.get_article(results[0]).image
+            inbox = BeautifulSoup(article.html(), "lxml").find("table", attrs={"class":["infobox vcard", "infobox geography vcard"]})
             summary = select_sentences(article.summary, 4)[:400]
             title = article.title
 
@@ -51,14 +49,17 @@ def make_query(message, bot):
             url = article.url
             keyboard = build_result_keyboard(url)
 
-            if image:
-                try:
-                    bot.telegram.send_photo(message.u_id, photo=image)
-                except Exception:
-                    bot.telegram.send_photo(
-                        message.u_id,
-                        photo=fit_size(image)
-                    )
+            if inbox:
+                image = inbox.find("img")
+                if image and int(image["width"])>20:
+                    image = "https:"+image["src"]
+                    try:
+                        bot.telegram.send_photo(message.u_id, photo=image)
+                    except Exception:
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=fit_size(image)
+                        )
 
             bot.send_message(message.u_id,
                              ARTICLE.render(title=title, article=summary),
