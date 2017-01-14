@@ -50,14 +50,16 @@ def make_query(message, bot):
             keyboard = build_result_keyboard(url)
 
             if inbox:
-                image = "https:"+inbox.find("img")["src"]
-                try:
-                    bot.telegram.send_photo(message.u_id, photo=image)
-                except Exception:
-                    bot.telegram.send_photo(
-                        message.u_id,
-                        photo=fit_size(image)
-                    )
+                image = inbox.find("img")
+                if image and int(image["width"])>20:
+                    image = "https:"+image["src"]
+                    try:
+                        bot.telegram.send_photo(message.u_id, photo=image)
+                    except Exception:
+                        bot.telegram.send_photo(
+                            message.u_id,
+                            photo=fit_size(image)
+                        )
 
             bot.send_message(message.u_id,
                              ARTICLE.render(title=title, article=summary),
