@@ -34,10 +34,7 @@ def select_sentences(text, sentences):
 
 
 def make_query(message, bot):
-    try:
-        results = wikipedia.search(message.text)
-    except requests.exceptions.InvalidURL:
-        results = False
+    results = wikipedia.search(message.text)
     if results:
         try:
             article = wikipedia.page(results[0])
@@ -71,10 +68,11 @@ def make_query(message, bot):
             keyboard = telegram.ReplyKeyboardMarkup(
                 [[result] for result in ex.options[: 4 if len(ex.options) - 4 else -1]] + [["Back to the menu 🏠"]])
             bot.send_message(message.u_id, 'This word has many meanings, select one 📔', reply_markup=keyboard)
+
+        bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
     else:
         bot.send_message(message.u_id, "I'm sorry, I didn't find anything ☹️")
-        bot.send_message(message.u_id, 'What do you want to know else? 🤓')
-    bot.user_set(message.u_id, 'next_handler', 'wiki-make-query')
+
 
 def build_result_keyboard(article_url):
     url_button = telegram.InlineKeyboardButton("Open article 🌐", url=article_url)
