@@ -8,7 +8,9 @@ from boto3.dynamodb.conditions import Key
 def main():
     table = boto3.resource('dynamodb', 'eu-west-1').Table('LeonardBot9gagPosts')
     response = table.scan(
-        FilterExpression=Key('createdAt').lt(int(time.time()) - 604800)
+        FilterExpression=(
+            Key('createdAt').lt(int(time.time()) - 604800) | Key('img').eq(None)
+        )
     )
     logging.info('{} memes to delete'.format(response['Count']))
     for meme in response['Items']:

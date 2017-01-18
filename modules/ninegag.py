@@ -94,8 +94,8 @@ def show_meme(message, bot: Leonard, user_id=None):
 
 def get_meme(bot: Leonard, user_id):
     meme = sorted(bot.nine_gag.scan(
-        FilterExpression=~Attr('viewed').contains(user_id)
-    )['Items'], key = sort_by_points)[-1]
+        FilterExpression=~Attr('viewed').contains(user_id) & Attr('img').exists()
+    )['Items'], key=sort_by_points)[-1]
     return meme, meme.get('title', ''), \
            meme['img'] if 'file_id' not in meme or not meme['file_id'] else meme['file_id'], \
            meme['postId'], \
