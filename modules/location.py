@@ -46,6 +46,8 @@ def reverse_geocode(lat, long, bot=None):
     response = geocoder.reverse(long, lat).json()
     if bot:
         bot.logger.info('Mapbox response: {}'.format(response))
+    if len(response['features']) == 0:
+        return None
     place = response['features'][0]
     country = None
     for context in place['context']:
@@ -88,8 +90,9 @@ def location_setup_result(message, bot):
 
 def set_location(bot, u_id, location):
     result = reverse_geocode(location['latitude'], location['longitude'], bot)
-    bot.user_set(u_id, 'location', json.dumps(result))
-    return result
+    if result:
+        bot.user_set(u_id, 'location', json.dumps(result))
+        return result
 
 
 def new_location(message, bot):
