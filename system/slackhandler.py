@@ -10,7 +10,9 @@ class SlackHandler(logging.Handler):
 
     def emit(self, record):
         if str(record.msg) != 'Unauthorized':
-            self.slack.chat.post_message('#leonard', text='ERROR ON {}\n{}'.format(
-                'DEBUG' if os.environ.get('BOT_DEBUG', '0') == '1' else 'PRODUCTION @channel',
-                record
+            self.slack.chat.post_message(
+                '#leonard-bugs',
+                text='ERROR ON {}\n{}'.format(
+                    'DEBUG' if os.environ.get('BOT_DEBUG', '0') == '1' else 'PRODUCTION @channel',
+                    record
             ), parse='full')
