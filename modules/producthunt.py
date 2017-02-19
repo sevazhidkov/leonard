@@ -42,15 +42,16 @@ def register(bot):
 
 def send_products(message, bot):
     products = get_products(bot)
-    bot.user_set(message.u_id, "producthunt:cur_entry", 0)
-    reply_message = PRODUCT_MESSAGE.render(product=products[0])
-    reply_markup = build_result_keyboard(0, products[0], len(products))
+    if len(products) > 0:
+        bot.user_set(message.u_id, "producthunt:cur_entry", 0)
+        reply_message = PRODUCT_MESSAGE.render(product=products[0])
+        reply_markup = build_result_keyboard(0, products[0], len(products))
 
-    bot.telegram.send_message(message.u_id,
-                              reply_message,
-                              parse_mode=telegram.ParseMode.MARKDOWN,
-                              reply_markup=reply_markup,
-                              disable_web_page_preview=True)
+        bot.telegram.send_message(message.u_id,
+                                  reply_message,
+                                  parse_mode=telegram.ParseMode.MARKDOWN,
+                                  reply_markup=reply_markup,
+                                  disable_web_page_preview=True)
 
 
 def next_entry(query, bot):
