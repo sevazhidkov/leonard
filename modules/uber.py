@@ -185,12 +185,13 @@ def choose_product(message, bot):
 
     # Prepare request to Uber - we'll add product id later
     request_data = {}
-    user_location = json.loads(bot.user_get(message.u_id, 'uber:location:location'))
+    user_location = bot.user_get(message.u_id, 'uber:location:location')
     place_id = bot.user_get(message.u_id, 'uber:location:place_id')
 
     if place_id:
         request_data['start_place_id'] = place_id
     else:
+        user_location = json.loads(user_location)
         request_data['start_latitude'] = user_location['latitude']
         request_data['start_longitude'] = user_location['longitude']
 
