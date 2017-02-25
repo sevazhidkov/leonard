@@ -190,16 +190,17 @@ def choose_product(message, bot):
 
     if place_id:
         request_data['start_place_id'] = place_id
-    else:
+    elif user_location:
         user_location = json.loads(user_location)
         request_data['start_latitude'] = user_location['latitude']
         request_data['start_longitude'] = user_location['longitude']
 
+    location = bot.user_get(message.u_id, 'uber:destination:location')
     place_id = bot.user_get(message.u_id, 'uber:destination:place_id')
     if place_id:
         request_data['end_place_id'] = place_id
-    else:
-        location = json.loads(bot.user_get(message.u_id, 'uber:destination:location'))
+    elif location:
+        location = json.loads(location)
         request_data['end_latitude'] = location['latitude']
         request_data['end_longitude'] = location['longitude']
 
